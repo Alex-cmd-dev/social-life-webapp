@@ -1,0 +1,39 @@
+# ============================================================================
+# Git Attributes Configuration
+# ============================================================================
+# This file ensures consistent line endings across Windows, Mac, and Linux
+# Learn more: https://git-scm.com/docs/gitattributes
+# ============================================================================
+
+# Auto-detect text files and normalize line endings to LF in the repository
+* text=auto
+
+# Explicitly set line endings for text files to LF (Unix-style)
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+
+# Declare files that will always have CRLF line endings on checkout (Windows batch files)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Denote all files that should not be modified
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
