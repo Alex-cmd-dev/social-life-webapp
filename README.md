@@ -175,22 +175,33 @@ This opens a web interface at [http://localhost:5555](http://localhost:5555) whe
 
 ```
 social-life-webapp/
-├── app/                    # Next.js App Router pages and layouts
-│   ├── api/               # API routes
+├── app/                    # Next.js App Router
+│   ├── (frontend)/        # 🎨 Frontend - User pages (organized)
+│   │   └── page.tsx       # Home page
+│   ├── api/               # ⚙️ Backend - API routes
 │   │   └── auth/          # NextAuth API routes
 │   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # React components (add yours here)
-├── lib/                   # Utility functions and configs
+│   └── globals.css        # Global styles
+├── components/            # Reusable React components
+│   └── ui/               # UI components (buttons, cards, etc.)
+├── lib/                   # Utility functions & configs
 │   ├── prisma.ts         # Database client
 │   └── auth.ts           # NextAuth configuration
-├── prisma/               # Database schema and migrations
-│   └── schema.prisma     # Database models
+├── prisma/               # 🗄️ Database schema
+│   └── schema.prisma     # Database models (User, Post, Like, Follow)
 ├── types/                # TypeScript type definitions
 ├── .env                  # Environment variables (DO NOT COMMIT)
 ├── .env.example          # Example environment variables
 └── package.json          # Project dependencies and scripts
 ```
+
+**Clear Separation:**
+
+- 🎨 **Frontend** (what users see): `app/(frontend)/`
+- ⚙️ **Backend** (API & logic): `app/api/`
+- 🗄️ **Database** (schema): `prisma/schema.prisma`
+
+📖 See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed structure explanation
 
 ## 🎓 Learning Resources
 
@@ -245,13 +256,8 @@ social-life-webapp/
 
 ## 🤝 Contributing
 
-This is a class project. Feel free to:
-
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Commit your changes: `git commit -m 'Add some amazing feature'`
 4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
-
-
-]

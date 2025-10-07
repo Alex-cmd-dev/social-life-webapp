@@ -205,7 +205,4 @@ npm run db:generate # Generate Prisma Client
 
 - Check the main [README.md](./README.md) for detailed documentation
 - Review the [Components Guide](./components/README.md)
-- Search existing issues on GitHub
-- Ask your instructor or classmates
 
----
