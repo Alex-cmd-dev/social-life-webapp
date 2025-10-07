@@ -66,9 +66,11 @@ npm install
 
 This will install all the required packages. It may take a few minutes.
 
-### Step 3: Set Up Your Database
+### Step 3: Set Up Your Database (Cloud-Hosted, NOT Local!)
 
-You'll need a PostgreSQL database. We recommend using a hosted solution (free tier available):
+**Important:** The database runs **in the cloud**, not on your computer! You don't need to install PostgreSQL.
+
+You'll sign up for a **free cloud database** that's always running online:
 
 #### Option A: Supabase (Recommended for Beginners)
 
@@ -89,6 +91,21 @@ You'll need a PostgreSQL database. We recommend using a hosted solution (free ti
 1. Go to [neon.tech](https://neon.tech/) and sign up for free
 2. Create a new project
 3. Copy the connection string from the dashboard
+
+**What you just did:** ✅ You now have a PostgreSQL database running 24/7 in the cloud! Your Next.js app will connect to it via the internet.
+
+**How it works:**
+
+```
+Your Computer (localhost:3000)
+       ↓
+  (connects via DATABASE_URL)
+       ↓
+Supabase/Neon Cloud
+       ↓
+PostgreSQL Database
+  (stores your data)
+```
 
 ### Step 4: Configure Environment Variables
 
@@ -122,15 +139,22 @@ You'll need a PostgreSQL database. We recommend using a hosted solution (free ti
    NEXTAUTH_URL="http://localhost:3000"
    ```
 
-### Step 5: Set Up the Database
+### Step 5: Create Database Tables (In the Cloud!)
 
-Push the database schema to your database:
+Push the database schema to your cloud database:
 
 ```bash
 npm run db:push
 ```
 
-This creates all the necessary tables in your database based on the Prisma schema.
+This creates all the necessary tables (User, Post, Like, Follow) **in your cloud database** based on the Prisma schema.
+
+**What just happened:**
+
+- ✅ Prisma read your `schema.prisma` file
+- ✅ Connected to your cloud database via `DATABASE_URL`
+- ✅ Created all tables in **Supabase/Neon** (not on your computer!)
+- ✅ Your database is now ready to store data!
 
 ### Step 6: Run the Development Server
 
