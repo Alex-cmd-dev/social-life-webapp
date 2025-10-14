@@ -1,6 +1,8 @@
-# Social Life - Social Media Web App
+# In Progress - Social Media Web App
 
 A modern social media application built with Next.js 14, TypeScript, Prisma, and PostgreSQL. This project is designed for learning web development and building a complete full-stack application.
+
+Current Ideas: Idea box posts, share music app, and a community for workouts
 
 ## 🚀 Tech Stack
 
