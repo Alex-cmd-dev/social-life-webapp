@@ -1,8 +1,13 @@
+"use client"
+
 import Link from "next/link"
+import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Search, User } from "lucide-react"
+import { Search, User, LogOut } from "lucide-react"
 
 export function Header() {
+  const { data: session, status } = useSession()
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -31,10 +36,32 @@ export function Header() {
           <Button variant="ghost" size="icon" className="hidden sm:flex">
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-          </Button>
-          <Button className="hidden sm:flex">Sign In</Button>
+
+          {status === "loading" ? (
+            <Button variant="ghost" size="sm" disabled>
+              Loading...
+            </Button>
+          ) : session ? (
+            <>
+              <div className="hidden sm:flex items-center gap-2 text-sm">
+                <User className="h-4 w-4" />
+                <span className="font-medium">{session.user?.name || session.user?.email}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => signOut()}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/signin">
+                <Button variant="ghost" size="sm">Sign In</Button>
+              </Link>
+              <Link href="/auth/signup" className="hidden sm:inline-block">
+                <Button size="sm">Sign Up</Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

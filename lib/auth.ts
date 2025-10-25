@@ -2,62 +2,90 @@
  * NextAuth Configuration
  *
  * This file contains the configuration for NextAuth.js, which handles
- * authentication in our social media app.
+ * authentication in our social media app using JWT and email/password.
  *
  * Learn more: https://next-auth.js.org/configuration/options
  */
 
 import { NextAuthOptions } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
-
-// You can add authentication providers here later (Google, GitHub, etc.)
-// import GoogleProvider from "next-auth/providers/google"
-// import GitHubProvider from "next-auth/providers/github"
+import bcrypt from "bcryptjs";
 
 /**
  * NextAuth configuration options
- * This is where you configure authentication providers, callbacks, and more
+ * Using JWT strategy with email/password credentials
  */
 export const authOptions: NextAuthOptions = {
-  // Use Prisma adapter to store user data in our PostgreSQL database
-  adapter: PrismaAdapter(prisma) as any,
-
-  // Authentication providers (add your providers here)
+  // Authentication providers
   providers: [
-    // Example: Google OAuth
-    // GoogleProvider({
-    //   clientId: process.env.GOOGLE_CLIENT_ID!,
-    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    // }),
-    // Example: GitHub OAuth
-    // GitHubProvider({
-    //   clientId: process.env.GITHUB_ID!,
-    //   clientSecret: process.env.GITHUB_SECRET!,
-    // }),
-    // Add more providers here as needed
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email", placeholder: "you@example.com" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Please enter your email and password");
+        }
+
+        // Find user in database
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user || !user.password) {
+          throw new Error("No user found with this email");
+        }
+
+        // Verify password
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          throw new Error("Invalid password");
+        }
+
+        // Return user object (will be stored in JWT)
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      },
+    }),
   ],
 
   // Custom pages for authentication
   pages: {
-    signIn: "/auth/signin", // Custom sign-in page (create this later)
-    // signOut: '/auth/signout',
+    signIn: "/auth/signin",
     // error: '/auth/error',
-    // verifyRequest: '/auth/verify-request',
   },
 
-  // Session configuration
+  // Session configuration - using JWT instead of database
   session: {
-    strategy: "database", // Store sessions in the database
+    strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
   // Callbacks allow you to control what happens during the authentication process
   callbacks: {
-    // This callback is called whenever a session is checked
-    async session({ session, user }) {
+    // JWT callback - called when token is created or updated
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+
+    // Session callback - called when session is checked
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id;
+        session.user.id = token.id as string;
       }
       return session;
     },

@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // ============================================
@@ -19,21 +19,22 @@ model User {
   name          String?
   email         String?   @unique
   emailVerified DateTime?
+  password      String?   // Hashed password for credentials auth
   image         String?
-  bio           String?   @db.Text
+  bio           String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
-  // NextAuth.js required fields
+
+  // NextAuth.js required fields (optional for JWT strategy)
   accounts      Account[]
   sessions      Session[]
-  
+
   // Social media relations
   posts         Post[]    // Posts created by this user
   likes         Like[]    // Likes made by this user
   followers     Follow[]  @relation("UserFollowers")  // Users following this user
   following     Follow[]  @relation("UserFollowing")  // Users this user is following
-  
+
   @@index([email])
 }
 
@@ -43,7 +44,7 @@ model User {
 // Represents a post/status update in the social media app
 model Post {
   id        String   @id @default(cuid())
-  content   String   @db.Text
+  content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -110,12 +111,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
