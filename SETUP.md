@@ -193,8 +193,6 @@ Once everything is running:
 
 ```bash
 npm run dev         # Start development server
-npm run build       # Build for production
-npm start           # Run production server
 npm run lint        # Check for code issues
 npm run db:push     # Sync database with schema
 npm run db:studio   # Open database viewer

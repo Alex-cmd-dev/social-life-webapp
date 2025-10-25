@@ -1,26 +1,42 @@
-# In Progress - Social Media Web App
+# In Progress - Social Media Web App (IdeaBox)
 
-A modern social media application built with Next.js 14, TypeScript, Prisma, and PostgreSQL. This project is designed for learning web development and building a complete full-stack application.
+A modern social media application built with Next.js 15, TypeScript, Prisma, and PostgreSQL. This project is designed for learning web development and building a complete full-stack application.
 
-Current Ideas: Idea box posts, share music app, and a community for workouts
+Current Focus: **IdeaBox** - A platform for sharing ideas, getting feedback, and following inspiring projects and creators.
 
 ## 🚀 Tech Stack
 
-- **Framework:** Next.js 14+ (App Router)
+- **Framework:** Next.js 15+ (App Router)
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS
+- **Styling:** Tailwind CSS v4
+- **UI Components:** shadcn/ui (Radix UI primitives)
 - **Database:** PostgreSQL (via Supabase or Neon)
 - **ORM:** Prisma
 - **Authentication:** NextAuth.js
+- **Icons:** Lucide React
 
-## 📋 Features (Planned)
+## 📋 Features
 
+### ✅ Implemented
+- IdeaBox feed with idea cards
+- Create idea dialog (UI only, using mock data)
+- User profile pages
+- Idea detail pages
+- Comment sections
+- Following feed
+- Project roadmap view
+- Responsive header with navigation
+- Dark mode support
+- Beautiful UI with shadcn/ui components
+
+### 🚧 Planned
 - User authentication and profiles
-- Create, edit, and delete posts
-- Like posts
-- Follow/unfollow users
-- User timeline/feed
-- Beautiful, responsive UI
+- Backend API integration
+- Database persistence
+- Real-time updates
+- Like and bookmark functionality
+- User follow/unfollow
+- Search functionality
 
 ## 🛠️ Prerequisites
 
@@ -203,19 +219,29 @@ This opens a web interface at [http://localhost:5555](http://localhost:5555) whe
 social-life-webapp/
 ├── app/                    # Next.js App Router
 │   ├── (frontend)/        # 🎨 Frontend - User pages (organized)
-│   │   └── page.tsx       # Home page
+│   │   ├── page.tsx       # Home page (IdeaBox feed)
+│   │   ├── following/     # Following feed page
+│   │   ├── idea/[id]/     # Individual idea detail pages
+│   │   └── profile/[username]/  # User profile pages
 │   ├── api/               # ⚙️ Backend - API routes
 │   │   └── auth/          # NextAuth API routes
 │   ├── layout.tsx         # Root layout
-│   └── globals.css        # Global styles
+│   └── globals.css        # Global styles & theme variables
 ├── components/            # Reusable React components
-│   └── ui/               # UI components (buttons, cards, etc.)
+│   ├── ui/               # shadcn/ui components (button, card, dialog, etc.)
+│   ├── header.tsx        # App header with navigation
+│   ├── idea-feed.tsx     # Main idea feed component
+│   ├── idea-card.tsx     # Individual idea card
+│   ├── create-idea-dialog.tsx  # Create idea modal
+│   └── ...               # Other feature components
 ├── lib/                   # Utility functions & configs
 │   ├── prisma.ts         # Database client
-│   └── auth.ts           # NextAuth configuration
+│   ├── auth.ts           # NextAuth configuration
+│   └── utils.ts          # Utility functions (cn helper)
 ├── prisma/               # 🗄️ Database schema
 │   └── schema.prisma     # Database models (User, Post, Like, Follow)
 ├── types/                # TypeScript type definitions
+├── components.json       # shadcn/ui configuration
 ├── .env                  # Environment variables (DO NOT COMMIT)
 ├── .env.example          # Example environment variables
 └── package.json          # Project dependencies and scripts
@@ -226,6 +252,7 @@ social-life-webapp/
 - 🎨 **Frontend** (what users see): `app/(frontend)/`
 - ⚙️ **Backend** (API & logic): `app/api/`
 - 🗄️ **Database** (schema): `prisma/schema.prisma`
+- 🎭 **UI Components**: `components/ui/` (shadcn/ui) & `components/` (features)
 
 📖 See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed structure explanation
 
