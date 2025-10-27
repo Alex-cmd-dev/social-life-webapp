@@ -110,14 +110,8 @@ You'll sign up for a **free cloud database** that's always running online:
 1. Copy the example environment file:
 
    ```bash
-   # On Mac/Linux:
-   cp .env.example .env
-
-   # On Windows (Command Prompt):
-   copy .env.example .env
-
-   # On Windows (PowerShell):
-   Copy-Item .env.example .env
+   # Works on all operating systems (Mac, Windows, Linux)
+   npm run setup:env
    ```
 
 2. Open the `.env` file in your code editor
@@ -164,7 +158,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. You should 
 
 ## 📝 Available Scripts
 
+- `npm run setup:env` - Create .env file from template (cross-platform)
 - `npm run dev` - Start the development server
+- `npm run dev:stop` - Stop the development server (cross-platform)
 - `npm run build` - Build the app for production
 - `npm start` - Run the production build
 - `npm run lint` - Check code for errors
@@ -273,8 +269,18 @@ social-life-webapp/
 
 ### Port 3000 already in use
 
-- Stop the other application using port 3000
-- Or run on a different port: `npm run dev -- -p 3001`
+Stop the development server and restart:
+
+```bash
+# Stop the development server (works on all operating systems)
+npm run dev:stop
+
+# Then restart
+npm run dev
+
+# Or run on a different port
+npm run dev -- -p 3001
+```
 
 ### Prisma errors
 
