@@ -52,14 +52,8 @@ Wait for the installation to complete. This might take 1-2 minutes.
 ### 3. Configure Environment Variables (2 minutes)
 
 ```bash
-# On Mac/Linux
-cp .env.example .env
-
-# On Windows (Command Prompt)
-copy .env.example .env
-
-# On Windows (PowerShell)
-Copy-Item .env.example .env
+# Works on all operating systems (Mac, Windows, Linux)
+npm run setup:env
 ```
 
 Open `.env` in your code editor and fill in:
@@ -149,7 +143,13 @@ npm run dev
 **Solution:**
 
 ```bash
-# Run on different port
+# Stop the development server (works on all operating systems)
+npm run dev:stop
+
+# Then restart
+npm run dev
+
+# Or run on a different port
 npm run dev -- -p 3001
 ```
 
@@ -192,7 +192,9 @@ Once everything is running:
 ## 📚 Available Commands
 
 ```bash
+npm run setup:env   # Create .env file from template (cross-platform)
 npm run dev         # Start development server
+npm run dev:stop    # Stop development server (cross-platform)
 npm run lint        # Check for code issues
 npm run db:push     # Sync database with schema
 npm run db:studio   # Open database viewer

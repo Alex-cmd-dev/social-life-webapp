@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:stop": "npx kill-port 3000",
+    "setup:env": "node -e \"require('fs').copyFileSync('.env.example', '.env')\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -73,6 +75,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "kill-port": "^2.0.1",
     "postcss": "^8.5",
     "prisma": "^6.17.0",
     "tailwindcss": "^4.1.9",

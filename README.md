@@ -90,7 +90,7 @@ This will install all the required packages. It may take a few minutes.
 
 You'll sign up for a **free cloud database** that's always running online:
 
-#### Option A: Supabase (Recommended for Beginners)
+#### Supabase 
 
 1. Go to [supabase.com](https://supabase.com/) and sign up for free
 2. Click "New Project"
@@ -104,26 +104,6 @@ You'll sign up for a **free cloud database** that's always running online:
 7. Copy the "URI" connection string (it starts with `postgresql://`)
 8. Replace `[YOUR-PASSWORD]` in the string with your database password
 
-#### Option B: Neon (Alternative)
-
-1. Go to [neon.tech](https://neon.tech/) and sign up for free
-2. Create a new project
-3. Copy the connection string from the dashboard
-
-**What you just did:** ✅ You now have a PostgreSQL database running 24/7 in the cloud! Your Next.js app will connect to it via the internet.
-
-**How it works:**
-
-```
-Your Computer (localhost:3000)
-       ↓
-  (connects via DATABASE_URL)
-       ↓
-Supabase/Neon Cloud
-       ↓
-PostgreSQL Database
-  (stores your data)
-```
 
 ### Step 4: Configure Environment Variables
 
