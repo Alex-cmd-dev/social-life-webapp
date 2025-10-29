@@ -293,6 +293,27 @@ npm run dev -- -p 3001
 - Run `npm install` again
 - Run `npm run dev`
 
+### npm install errors (ERESOLVE dependency conflicts)
+
+If you see peer dependency errors during `npm install`:
+
+- The project includes a `.npmrc` file that handles this automatically
+- This file configures npm to use `legacy-peer-deps=true` for compatibility between Next.js 15 and NextAuth.js v4
+- Simply run `npm install` - the configuration will be applied automatically
+- If issues persist:
+  ```bash
+  # Delete node_modules and package-lock.json
+  # Windows:
+  rmdir /s /q node_modules
+  del package-lock.json
+
+  # Mac/Linux:
+  rm -rf node_modules package-lock.json
+
+  # Then reinstall
+  npm install
+  ```
+
 ## 🤝 Contributing
 
 1. Fork the repository
