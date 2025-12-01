@@ -1,4 +1,4 @@
-// This is your Prisma schema file for the social media app
+// This is your Prisma schema file for the social media app (IdeaBox)
 // Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -6,8 +6,20 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+enum ProjectStatus {
+  IDEA
+  PLANNING
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+  CANCELLED
 }
 
 // ============================================
@@ -22,6 +34,7 @@ model User {
   password      String?   // Hashed password for credentials auth
   image         String?
   bio           String?
+  username      String?   @unique  // Unique username for profile URLs
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -30,30 +43,43 @@ model User {
   sessions      Session[]
 
   // Social media relations
-  posts         Post[]    // Posts created by this user
-  likes         Like[]    // Likes made by this user
-  followers     Follow[]  @relation("UserFollowers")  // Users following this user
-  following     Follow[]  @relation("UserFollowing")  // Users this user is following
+  posts         Post[]         // Posts/ideas created by this user
+  comments      Comment[]      // Comments made by this user
+  likes         Like[]         // Likes made by this user
+  bookmarks     Bookmark[]     // Posts bookmarked by this user
+  followers     Follow[]       @relation("UserFollowers")  // Users following this user
+  following     Follow[]       @relation("UserFollowing")  // Users this user is following
+  projects      Project[]      // Projects created by this user
+  projectUpdates ProjectUpdate[] // Project updates posted by this user
 
   @@index([email])
+  @@index([username])
 }
 
 // ============================================
 // Post Model
 // ============================================
-// Represents a post/status update in the social media app
+// Represents a post/idea in the social media app
 model Post {
   id        String   @id @default(cuid())
-  content   String
+  content   String   @db.Text
+  imageUrl  String?  // Optional image for the post
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId String?  // Optional: link post to a project
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  comments  Comment[]
   likes     Like[]
-  
+  bookmarks Bookmark[]
+
   @@index([userId])
+  @@index([projectId])
   @@index([createdAt])
 }
 
@@ -79,25 +105,124 @@ model Like {
 }
 
 // ============================================
+// Comment Model
+// ============================================
+// Represents a comment on a post (supports threaded/nested comments)
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Self-referential relation for threaded comments
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+// ============================================
+// Bookmark Model
+// ============================================
+// Represents a user bookmarking a post for later
+model Bookmark {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ensure a user can only bookmark a post once
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+// ============================================
 // Follow Model
 // ============================================
 // Represents a follow relationship between two users
 model Follow {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
-  
+
   // The user who is following
   followerId  String
   follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
-  
+
   // The user being followed
   followingId String
   following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
-  
+
   // Ensure a user can only follow another user once
   @@unique([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+// ============================================
+// Project Model
+// ============================================
+// Represents a user's project that can have multiple posts/updates
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  description String        @db.Text
+  imageUrl    String?
+  githubUrl   String?
+  liveUrl     String?
+  status      ProjectStatus @default(IDEA)
+  tags        String        @default("[]")  // Stored as JSON array string
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  posts       Post[]        // Posts related to this project
+  updates     ProjectUpdate[] // Timeline updates for this project
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ============================================
+// ProjectUpdate Model
+// ============================================
+// Represents a progress update on a project (for project roadmap/timeline)
+model ProjectUpdate {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  version   String?  // Optional version number (e.g., "v1.0", "Beta")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ============================================

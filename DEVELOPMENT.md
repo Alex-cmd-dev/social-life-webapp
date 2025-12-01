@@ -1,6 +1,12 @@
 # 👨‍💻 Development Guide
 
-This guide explains how to extend and develop features for the Social Life app.
+This guide explains the architecture and development patterns for the Social Life app.
+
+**🎯 Quick Links:**
+- **Backend Team (Beginners):** See [docs/BACKEND_GUIDE.md](./docs/BACKEND_GUIDE.md) for step-by-step instructions
+- **Frontend Team:** Continue reading this guide for architecture overview
+- **Git Workflow:** See [docs/GIT_WORKFLOW.md](./docs/GIT_WORKFLOW.md)
+- **API Specification:** See [docs/api-specification.yaml](./docs/api-specification.yaml)
 
 ## 📁 Project Structure
 
@@ -32,10 +38,7 @@ social-life-webapp/
 ├── lib/                     # Utility functions & configs
 │   ├── prisma.ts           # Database client instance
 │   ├── auth.ts             # NextAuth configuration
-│   └── services/           # Business logic layer (optional)
-│       ├── posts.service.ts
-│       ├── users.service.ts
-│       └── likes.service.ts
+│   └── auth-helpers.ts     # Helper functions for JWT authentication
 │
 ├── prisma/                  # 🗄️ DATABASE - Schema & migrations
 │   └── schema.prisma       # Database models (User, Post, Like, Follow)
@@ -52,7 +55,7 @@ social-life-webapp/
 | --------------------------------------------------- | -------------------------------------- |
 | 🎨 **User-facing page** (profile, feed, settings)   | `app/(frontend)/your-page/page.tsx`    |
 | ⚙️ **API endpoint** (fetch data, create posts)      | `app/api/your-endpoint/route.ts`       |
-| 💼 **Business logic** (validation, complex queries) | `lib/services/your-feature.service.ts` |
+| 💼 **Helper functions** (auth, validation, utils)   | `lib/your-helper.ts`                   |
 | 🧩 **Reusable component** (button, card, modal)     | `components/your-component.tsx`        |
 | 🗄️ **Database model** (new table/fields)            | `prisma/schema.prisma`                 |
 | 🛠️ **Utility function** (helpers, configs)          | `lib/your-util.ts`                     |
@@ -134,17 +137,9 @@ We use a **layered architecture** to keep concerns separated:
 │  • Handles HTTP requests (GET, POST, etc.)  │
 │  • Authentication & authorization           │
 │  • Input validation                         │
-│  • Calls services for business logic        │
-│  WHY: Thin layer, just handles HTTP         │
-└──────────────┬──────────────────────────────┘
-               ↓ Function call
-┌─────────────────────────────────────────────┐
-│  SERVICES (lib/services/) - OPTIONAL        │
 │  • Business logic                           │
-│  • Data transformation                      │
-│  • Complex queries                          │
 │  • Calls Prisma for database operations     │
-│  WHY: Reusable logic, easier to test        │
+│  WHY: Everything in one place, easy to find │
 └──────────────┬──────────────────────────────┘
                ↓ Prisma function call
 ┌─────────────────────────────────────────────┐
@@ -163,63 +158,64 @@ We use a **layered architecture** to keep concerns separated:
 └─────────────────────────────────────────────┘
 ```
 
-### 🔄 Two Valid Approaches
+### 🏗️ Our Architecture (Simplified)
 
-#### **Approach 1: Simple (No Services Layer)**
+We use a **simple, direct approach** that's perfect for learning:
 
 ```
 API Route → Prisma → Database
 ```
 
-**When to use:** Small projects, simple CRUD operations
-
+**Example:**
 ```typescript
 // app/api/posts/route.ts
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-helpers";
 
 export async function GET() {
-  const posts = await prisma.post.findMany(); // Direct Prisma call
-  return Response.json(posts);
+  // Get data directly with Prisma
+  const posts = await prisma.post.findMany({
+    include: { user: true, likes: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json(posts);
 }
-```
 
-**Pros:** ✅ Simpler, fewer files  
-**Cons:** ❌ Business logic mixed with HTTP handling
+export async function POST(request: Request) {
+  // Check authentication
+  const session = await requireAuth();
+  if (session instanceof NextResponse) return session;
 
----
+  // Get request data
+  const body = await request.json();
 
-#### **Approach 2: Modular (With Services Layer)** ⭐ Recommended for class project
-
-```
-API Route → Service → Prisma → Database
-```
-
-**When to use:** Medium-large projects, complex logic, team collaboration
-
-```typescript
-// lib/services/posts.service.ts
-import prisma from "@/lib/prisma";
-
-export class PostsService {
-  static async getAllPosts() {
-    return await prisma.post.findMany({
-      include: { user: true, likes: true },
-      orderBy: { createdAt: "desc" },
-    });
+  // Validate
+  if (!body.content) {
+    return NextResponse.json({ error: "Content required" }, { status: 400 });
   }
-}
 
-// app/api/posts/route.ts
-import { PostsService } from "@/lib/services/posts.service";
+  // Save to database
+  const post = await prisma.post.create({
+    data: {
+      content: body.content,
+      userId: session.user.id,
+    }
+  });
 
-export async function GET() {
-  const posts = await PostsService.getAllPosts(); // Call service
-  return Response.json(posts);
+  return NextResponse.json(post, { status: 201 });
 }
 ```
 
-**Pros:** ✅ Separation of concerns, ✅ Reusable logic, ✅ Easier testing  
-**Cons:** ❌ More files to manage
+**Why this approach?**
+- ✅ Simple and easy to understand
+- ✅ Fewer files to manage
+- ✅ Perfect for beginners
+- ✅ Quick to build
+- ✅ Easy to debug
+
+**See working examples:** `app/api/posts/route.ts` and `app/api/posts/[id]/route.ts`
 
 ### 🗂️ File Naming Conventions
 
@@ -229,7 +225,7 @@ Follow these naming patterns to keep your codebase organized:
 | ------------------ | ----------------- | ------------------------------- | ------------------------------------ |
 | **Frontend Pages** | `page.tsx`        | `app/(frontend)/feed/page.tsx`  | Next.js convention for routes        |
 | **API Routes**     | `route.ts`        | `app/api/posts/route.ts`        | Next.js convention for API endpoints |
-| **Services**       | `*.service.ts`    | `lib/services/posts.service.ts` | Clear it's a service layer           |
+| **Helpers**        | `*-helpers.ts`    | `lib/auth-helpers.ts`           | Helper/utility functions             |
 | **Components**     | `kebab-case.tsx`  | `components/post-card.tsx`      | Lowercase, descriptive               |
 | **UI Components**  | `kebab-case.tsx`  | `components/ui/button.tsx`      | Generic, reusable components         |
 | **Utilities**      | `kebab-case.ts`   | `lib/format-date.ts`            | Helper functions                     |
@@ -239,16 +235,14 @@ Follow these naming patterns to keep your codebase organized:
 
 ```
 ✅ GOOD:
-lib/services/posts.service.ts       → Handles post business logic
-lib/services/users.service.ts       → Handles user business logic
-lib/services/likes.service.ts       → Handles like business logic
+lib/auth-helpers.ts                 → Authentication helper functions
+lib/validation-helpers.ts           → Validation utilities
 components/post-card.tsx            → Post card component
 components/user-avatar.tsx          → User avatar component
 lib/format-date.ts                  → Date formatting utility
 
 ❌ BAD:
-lib/services/PostsService.ts        → Don't use PascalCase for files
-lib/services/posts.ts               → Missing .service suffix
+lib/AuthHelpers.ts                  → Don't use PascalCase for files
 components/PostCard.tsx             → Use kebab-case, not PascalCase
 lib/dateUtils.ts                    → Use kebab-case, not camelCase
 ```
@@ -347,95 +341,68 @@ const filtered = await prisma.post.findMany({
 });
 ```
 
-### 📦 Creating a Service Layer
+### 🔧 Creating Helper Functions
 
-**When to create a service:**
+For reusable logic (like authentication checks), create helper functions in `lib/`:
 
-- ✅ Complex business logic
-- ✅ Multiple database operations in one action
-- ✅ Logic needs to be reused in multiple places
-- ✅ Want to test business logic separately
-
-**Service structure:**
+**Example: Authentication helpers**
 
 ```typescript
-// lib/services/posts.service.ts
-import prisma from "@/lib/prisma";
+// lib/auth-helpers.ts
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
-export class PostsService {
-  /**
-   * Get all posts with user info and like counts
-   * WHY: Encapsulates complex query logic
-   */
-  static async getAllPosts() {
-    const posts = await prisma.post.findMany({
-      include: {
-        user: { select: { id: true, name: true, image: true } },
-        likes: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+export async function requireAuth() {
+  const session = await getServerSession(authOptions);
 
-    // Transform data - add like count
-    return posts.map((post) => ({
-      ...post,
-      likeCount: post.likes.length,
-    }));
+  if (!session || !session.user) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
   }
 
-  /**
-   * Create a new post with validation
-   * WHY: Validates before saving, business rule
-   */
-  static async createPost(userId: string, content: string) {
-    // Validation (business logic)
-    if (!content || content.length === 0) {
-      throw new Error("Content cannot be empty");
-    }
-    if (content.length > 500) {
-      throw new Error("Content too long");
-    }
+  return session;
+}
 
-    // Database operation
-    return await prisma.post.create({
-      data: { content, userId },
-      include: { user: true },
-    });
-  }
+export async function checkOwnership(resourceUserId: string) {
+  const session = await getServerSession(authOptions);
+  return session?.user?.id === resourceUserId;
 }
 ```
 
-**Using the service in API route:**
+**Using helpers in API routes:**
 
 ```typescript
 // app/api/posts/route.ts
 import { NextResponse } from "next/server";
-import { PostsService } from "@/lib/services/posts.service";
-
-export async function GET() {
-  try {
-    // API route stays thin - just handles HTTP
-    const posts = await PostsService.getAllPosts();
-    return NextResponse.json(posts);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch posts" },
-      { status: 500 }
-    );
-  }
-}
+import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-helpers";
 
 export async function POST(request: Request) {
-  try {
-    const { content, userId } = await request.json();
+  // Check if user is logged in
+  const session = await requireAuth();
+  if (session instanceof NextResponse) return session;
 
-    // Service handles validation and business logic
-    const post = await PostsService.createPost(userId, content);
-
-    return NextResponse.json(post, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  // Get request data and validate
+  const { content } = await request.json();
+  if (!content || content.length > 500) {
+    return NextResponse.json(
+      { error: "Invalid content" },
+      { status: 400 }
+    );
   }
+
+  // Save to database
+  const post = await prisma.post.create({
+    data: {
+      content,
+      userId: session.user.id,
+    }
+  });
+
+  return NextResponse.json(post, { status: 201 });
 }
 ```
 
@@ -444,9 +411,9 @@ export async function POST(request: Request) {
 | Layer          | Responsibility        | What It Does                                 | What It Doesn't Do                     |
 | -------------- | --------------------- | -------------------------------------------- | -------------------------------------- |
 | **Frontend**   | UI & User Interaction | Display data, handle clicks, forms           | Direct database access, business logic |
-| **API Routes** | HTTP Handling         | Parse requests, return responses, auth       | Business logic, data transformation    |
-| **Services**   | Business Logic        | Validation, complex queries, transformations | HTTP handling, UI rendering            |
-| **Prisma**     | Database Access       | Query database, type safety                  | Business rules, validation             |
+| **API Routes** | HTTP & Business Logic | Parse requests, validate, query DB, respond  | UI rendering                           |
+| **Helpers**    | Reusable Utilities    | Auth checks, validation, formatting          | HTTP handling, database queries        |
+| **Prisma**     | Database Access       | Query database, type safety                  | HTTP handling, UI rendering            |
 | **Database**   | Data Storage          | Store and retrieve data                      | Business logic, validation             |
 
 ### 🚀 Example: Complete Feature Flow
@@ -469,29 +436,33 @@ async function handleCreatePost(content: string) {
 
 ```typescript
 export async function POST(request: Request) {
+  // Authenticate
+  const session = await requireAuth();
+  if (session instanceof NextResponse) return session;
+
+  // Validate
   const { content } = await request.json();
-  const post = await PostsService.createPost(userId, content);
-  return NextResponse.json(post);
+  if (!content || content.length > 500) {
+    return NextResponse.json({ error: "Invalid content" }, { status: 400 });
+  }
+
+  // Save to database
+  const post = await prisma.post.create({
+    data: { content, userId: session.user.id }
+  });
+
+  return NextResponse.json(post, { status: 201 });
 }
 ```
 
-**3. Service** (`lib/services/posts.service.ts`)
-
-```typescript
-static async createPost(userId: string, content: string) {
-  if (content.length > 500) throw new Error("Too long");
-  return await prisma.post.create({ data: { content, userId } });
-}
-```
-
-**4. Prisma** (`lib/prisma.ts`)
+**3. Prisma** (`lib/prisma.ts`)
 
 ```typescript
 // Prisma converts to SQL:
 // INSERT INTO "Post" (id, content, userId) VALUES (...)
 ```
 
-**5. Database**
+**4. Database**
 
 ```
 Stores the data in PostgreSQL ✅

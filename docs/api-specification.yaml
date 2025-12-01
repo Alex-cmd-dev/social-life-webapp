@@ -1,0 +1,1040 @@
+openapi: 3.0.0
+info:
+  title: IdeaBox API
+  description: |
+    API documentation for the IdeaBox social media platform.
+
+    **Authentication:** Most endpoints require a valid JWT token obtained from `/api/auth/signin`.
+    Include the token in the `Authorization` header as: `Bearer YOUR_TOKEN`
+
+    **For Backend Developers:**
+    - Each endpoint spec below shows what you need to build
+    - Follow the example endpoints in `app/api/posts/route.ts`
+    - Use Prisma to interact with the database
+    - Always validate user input before saving to database
+  version: 1.0.0
+  contact:
+    name: IdeaBox Team
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+# Reusable components
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from NextAuth signin
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      example:
+        error: "Something went wrong"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        image:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        id: "clx1234567890"
+        name: "John Doe"
+        email: "john@example.com"
+        username: "johndoe"
+        image: "https://example.com/avatar.jpg"
+        bio: "Software developer"
+        createdAt: "2024-01-01T00:00:00.000Z"
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        userId:
+          type: string
+        projectId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      example:
+        id: "clx1234567890"
+        content: "Just launched my new app!"
+        imageUrl: "https://example.com/screenshot.png"
+        userId: "clx0987654321"
+        projectId: null
+        createdAt: "2024-01-01T00:00:00.000Z"
+        updatedAt: "2024-01-01T00:00:00.000Z"
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        postId:
+          type: string
+        userId:
+          type: string
+        parentId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      example:
+        id: "clx1234567890"
+        content: "Great work!"
+        postId: "clx0987654321"
+        userId: "clx1111111111"
+        parentId: null
+        createdAt: "2024-01-01T00:00:00.000Z"
+        updatedAt: "2024-01-01T00:00:00.000Z"
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        githubUrl:
+          type: string
+          nullable: true
+        liveUrl:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [IDEA, PLANNING, IN_PROGRESS, COMPLETED, ON_HOLD, CANCELLED]
+        tags:
+          type: string
+          description: JSON array string of tags
+        userId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      example:
+        id: "clx1234567890"
+        title: "Task Manager App"
+        description: "A simple task management application"
+        imageUrl: "https://example.com/project.png"
+        githubUrl: "https://github.com/user/task-app"
+        liveUrl: "https://task-app.com"
+        status: "IN_PROGRESS"
+        tags: '["React", "Node.js"]'
+        userId: "clx0987654321"
+        createdAt: "2024-01-01T00:00:00.000Z"
+        updatedAt: "2024-01-01T00:00:00.000Z"
+
+# Security applied globally (can be overridden per endpoint)
+security:
+  - BearerAuth: []
+
+paths:
+  # ==================== AUTH ENDPOINTS ====================
+  /api/auth/signup:
+    post:
+      summary: Register a new user
+      description: Create a new user account with email and password
+      security: []  # No auth required for signup
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "SecurePassword123"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================== USER ENDPOINTS ====================
+  /api/users:
+    get:
+      summary: Get all users
+      description: Retrieve a list of all users (paginated)
+      tags:
+        - Users
+      parameters:
+        - name: limit
+          in: query
+          description: Number of users to return
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: Number of users to skip
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create a new user
+      description: Create a new user (admin only - may not be needed if using signup)
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                username:
+                  type: string
+                bio:
+                  type: string
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/{id}:
+    get:
+      summary: Get a user by ID
+      description: Retrieve a single user's information
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update a user
+      description: Update user information (users can only update their own profile)
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                username:
+                  type: string
+                bio:
+                  type: string
+                image:
+                  type: string
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - can only update own profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a user
+      description: Delete a user account (users can only delete their own account)
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User deleted successfully"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==================== POST ENDPOINTS ====================
+  /api/posts:
+    get:
+      summary: Get all posts
+      description: Retrieve a feed of all posts (newest first)
+      tags:
+        - Posts
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+
+    post:
+      summary: Create a new post
+      description: Create a new post/idea
+      tags:
+        - Posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  example: "Check out my new project idea!"
+                imageUrl:
+                  type: string
+                  example: "https://example.com/image.jpg"
+                projectId:
+                  type: string
+                  example: "clx1234567890"
+      responses:
+        '201':
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/posts/{id}:
+    get:
+      summary: Get a post by ID
+      description: Retrieve a single post with its details
+      tags:
+        - Posts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update a post
+      description: Update a post (only the author can update)
+      tags:
+        - Posts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                imageUrl:
+                  type: string
+      responses:
+        '200':
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - not the post author
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a post
+      description: Delete a post (only the author can delete)
+      tags:
+        - Posts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Post deleted successfully"
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # ==================== COMMENT ENDPOINTS ====================
+  /api/comments:
+    get:
+      summary: Get all comments
+      description: Get all comments (usually you'd get comments by post ID instead)
+      tags:
+        - Comments
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+
+    post:
+      summary: Create a comment
+      description: Create a new comment on a post
+      tags:
+        - Comments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+                - postId
+              properties:
+                content:
+                  type: string
+                  example: "Great idea!"
+                postId:
+                  type: string
+                  example: "clx1234567890"
+                parentId:
+                  type: string
+                  nullable: true
+                  example: null
+                  description: ID of parent comment for nested replies
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/comments/{id}:
+    get:
+      summary: Get a comment by ID
+      description: Retrieve a single comment
+      tags:
+        - Comments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Comment found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '404':
+          description: Comment not found
+
+    put:
+      summary: Update a comment
+      description: Update a comment (only the author can update)
+      tags:
+        - Comments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '403':
+          description: Forbidden
+
+    delete:
+      summary: Delete a comment
+      description: Delete a comment (only the author can delete)
+      tags:
+        - Comments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Comment deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  # ==================== LIKE ENDPOINTS ====================
+  /api/likes/{postId}:
+    post:
+      summary: Like a post
+      description: Add a like to a post
+      tags:
+        - Likes
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: ID of the post to like
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Post liked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  postId:
+                    type: string
+                  userId:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        '400':
+          description: Already liked this post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+
+    delete:
+      summary: Unlike a post
+      description: Remove a like from a post
+      tags:
+        - Likes
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Like removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Like removed"
+        '404':
+          description: Like not found
+
+  # ==================== FOLLOW ENDPOINTS ====================
+  /api/follows:
+    get:
+      summary: Get follow relationships
+      description: Get all followers or following for current user
+      tags:
+        - Follows
+      parameters:
+        - name: type
+          in: query
+          description: Get 'followers' or 'following'
+          schema:
+            type: string
+            enum: [followers, following]
+            default: followers
+      responses:
+        '200':
+          description: List of follow relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    followerId:
+                      type: string
+                    followingId:
+                      type: string
+                    createdAt:
+                      type: string
+
+    post:
+      summary: Follow a user
+      description: Follow another user
+      tags:
+        - Follows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - followingId
+              properties:
+                followingId:
+                  type: string
+                  description: ID of user to follow
+                  example: "clx1234567890"
+      responses:
+        '201':
+          description: Now following user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  followerId:
+                    type: string
+                  followingId:
+                    type: string
+        '400':
+          description: Already following or invalid request
+
+    delete:
+      summary: Unfollow a user
+      description: Unfollow a user you're currently following
+      tags:
+        - Follows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - followingId
+              properties:
+                followingId:
+                  type: string
+                  description: ID of user to unfollow
+      responses:
+        '200':
+          description: Unfollowed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  # ==================== PROJECT ENDPOINTS ====================
+  /api/projects:
+    get:
+      summary: Get all projects
+      description: Get all projects (can filter by user)
+      tags:
+        - Projects
+      parameters:
+        - name: userId
+          in: query
+          description: Filter by user ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+    post:
+      summary: Create a project
+      description: Create a new project
+      tags:
+        - Projects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+              properties:
+                title:
+                  type: string
+                  example: "My Awesome App"
+                description:
+                  type: string
+                  example: "A revolutionary task management app"
+                imageUrl:
+                  type: string
+                githubUrl:
+                  type: string
+                liveUrl:
+                  type: string
+                status:
+                  type: string
+                  enum: [IDEA, PLANNING, IN_PROGRESS, COMPLETED, ON_HOLD, CANCELLED]
+                tags:
+                  type: string
+                  example: '["React", "TypeScript"]'
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  /api/projects/{id}:
+    get:
+      summary: Get a project by ID
+      description: Get details of a specific project
+      tags:
+        - Projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+
+    put:
+      summary: Update a project
+      description: Update project details (only owner can update)
+      tags:
+        - Projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                imageUrl:
+                  type: string
+                githubUrl:
+                  type: string
+                liveUrl:
+                  type: string
+                status:
+                  type: string
+                tags:
+                  type: string
+      responses:
+        '200':
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '403':
+          description: Forbidden
+
+    delete:
+      summary: Delete a project
+      description: Delete a project (only owner can delete)
+      tags:
+        - Projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Users
+    description: User management endpoints
+  - name: Posts
+    description: Post/idea management
+  - name: Comments
+    description: Comment management
+  - name: Likes
+    description: Like/unlike posts
+  - name: Follows
+    description: Follow/unfollow users
+  - name: Projects
+    description: Project management

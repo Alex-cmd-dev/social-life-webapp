@@ -232,6 +232,16 @@ social-life-webapp/
 
 📖 See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed structure explanation
 
+## 📚 Documentation for Backend Team
+
+The backend team should start here:
+
+- **[Backend Development Guide](./docs/BACKEND_GUIDE.md)** - Complete guide for building API endpoints
+- **[API Specification](./docs/api-specification.yaml)** - OpenAPI spec with all endpoints to build
+- **[Supabase Setup Guide](./docs/SUPABASE_SETUP.md)** - How to set up PostgreSQL database
+- **[Git Workflow](./docs/GIT_WORKFLOW.md)** - Team collaboration workflow
+- **[Documentation Index](./docs/README.md)** - Overview of all documentation
+
 ## 🎓 Learning Resources
 
 ### Next.js
