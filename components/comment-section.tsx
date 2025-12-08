@@ -2,11 +2,12 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { CommentCard } from "./comment-card"
+import { formatDistanceToNow } from "date-fns"
 
 interface CommentSectionProps {
   ideaId: string
@@ -14,50 +15,76 @@ interface CommentSectionProps {
 
 export function CommentSection({ ideaId }: CommentSectionProps) {
   const [comment, setComment] = useState("")
+  const [comments, setComments] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
-  // Mock comments data
-  const comments = [
-    {
-      id: "1",
-      author: {
-        name: "Alex Rivera",
-        username: "alexrivera",
-        avatar: "/man-avatar.png",
-      },
-      content:
-        "This is a fantastic idea! I've been looking for something like this. Have you considered integrating with popular IDEs like VS Code?",
-      timestamp: "1h ago",
-      likes: 12,
-    },
-    {
-      id: "2",
-      author: {
-        name: "Jordan Kim",
-        username: "jordankim",
-        avatar: "/diverse-person-avatars.png",
-      },
-      content:
-        "Love the concept! One suggestion: maybe add a feature to compare code quality metrics over time so teams can track improvement.",
-      timestamp: "45m ago",
-      likes: 8,
-    },
-    {
-      id: "3",
-      author: {
-        name: "Taylor Morgan",
-        username: "taylormorgan",
-        avatar: "/diverse-woman-avatar.png",
-      },
-      content: "Would this work with different programming languages? Our team uses Python, JavaScript, and Go.",
-      timestamp: "30m ago",
-      likes: 5,
-    },
-  ]
+  useEffect(() => {
+    fetchComments()
+  }, [ideaId])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  async function fetchComments() {
+    try {
+      const response = await fetch(`/api/comments?postId=${ideaId}`)
+      if (response.ok) {
+        const data = await response.json()
+        const formattedComments = data.map((c: any) => ({
+          id: c.id,
+          author: {
+            name: c.user.name || "Anonymous",
+            username: c.user.id,
+            avatar: c.user.image || "/placeholder.svg",
+          },
+          content: c.content,
+          timestamp: formatDistanceToNow(new Date(c.createdAt), { addSuffix: true }),
+          likes: 0,
+        }))
+        setComments(formattedComments)
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Comment submitted:", comment)
-    setComment("")
+    if (!comment.trim()) return
+
+    setSubmitting(true)
+    try {
+      const response = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId: ideaId,
+          content: comment,
+        }),
+      })
+
+      if (response.ok) {
+        setComment("")
+        await fetchComments()
+      } else {
+        console.error("Failed to post comment")
+      }
+    } catch (error) {
+      console.error("Error posting comment:", error)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div>
+        <h2 className="text-2xl font-bold mb-6">Comments</h2>
+        <div className="text-center py-8 text-muted-foreground">Loading comments...</div>
+      </div>
+    )
   }
 
   return (
@@ -72,19 +99,30 @@ export function CommentSection({ ideaId }: CommentSectionProps) {
             onChange={(e) => setComment(e.target.value)}
             rows={3}
             className="mb-4 resize-none"
+            disabled={submitting}
           />
           <div className="flex justify-end">
-            <Button type="submit" disabled={!comment.trim()} className="bg-primary hover:bg-primary/90">
-              Post Comment
+            <Button
+              type="submit"
+              disabled={!comment.trim() || submitting}
+              className="bg-gradient-to-br from-purple-600 to-pink-600"
+            >
+              {submitting ? "Posting..." : "Post Comment"}
             </Button>
           </div>
         </form>
       </Card>
 
       <div className="space-y-4">
-        {comments.map((comment) => (
-          <CommentCard key={comment.id} comment={comment} />
-        ))}
+        {comments.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No comments yet. Be the first to comment!
+          </div>
+        ) : (
+          comments.map((comment) => (
+            <CommentCard key={comment.id} comment={comment} />
+          ))
+        )}
       </div>
     </div>
   )
