@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // ============================================
@@ -62,7 +62,7 @@ model User {
 // Represents a post/idea in the social media app
 model Post {
   id        String   @id @default(cuid())
-  content   String   @db.Text
+  content   String
   imageUrl  String?  // Optional image for the post
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,7 +110,7 @@ model Like {
 // Represents a comment on a post (supports threaded/nested comments)
 model Comment {
   id        String   @id @default(cuid())
-  content   String   @db.Text
+  content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -181,7 +181,7 @@ model Follow {
 model Project {
   id          String        @id @default(cuid())
   title       String
-  description String        @db.Text
+  description String
   imageUrl    String?
   githubUrl   String?
   liveUrl     String?
@@ -208,7 +208,7 @@ model Project {
 model ProjectUpdate {
   id        String   @id @default(cuid())
   title     String
-  content   String   @db.Text
+  content   String
   version   String?  // Optional version number (e.g., "v1.0", "Beta")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
