@@ -11,6 +11,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+// ---- DEV ONLY: fake auth for local development ----
+// Enable by setting USE_FAKE_AUTH=true in your local .env (only when NODE_ENV !== 'production')
+const DEV_FAKE_SESSION = {
+  user: {
+    id: "123",
+    name: "Dev User",
+    email: "dev@example.com",
+    image: null,
+  },
+} as any;
+// ---------------------------------------------------
+
 /**
  * Get the current logged-in user's session
  * Returns null if user is not logged in
@@ -23,6 +35,11 @@ import { NextResponse } from "next/server";
  * console.log(session.user.id); // Current user's ID
  */
 export async function getCurrentUser() {
+    // Local dev shortcut: return fake session when enabled
+  if (process.env.NODE_ENV !== "production" && process.env.USE_FAKE_AUTH === "true") {
+    return DEV_FAKE_SESSION;
+  }
+
   const session = await getServerSession(authOptions);
   return session;
 }
@@ -39,6 +56,11 @@ export async function getCurrentUser() {
  * const userId = session.user.id;
  */
 export async function requireAuth() {
+    // Local dev shortcut: return fake session when enabled
+  if (process.env.NODE_ENV !== "production" && process.env.USE_FAKE_AUTH === "true") {
+    return DEV_FAKE_SESSION;
+  }
+
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user) {
