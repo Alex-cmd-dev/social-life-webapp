@@ -34,17 +34,47 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
     setTags(tags.filter((tag) => tag !== tagToRemove))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("[v0] Idea submitted:", { title, content, tags, isProject })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-    // Reset form
-    setTitle("")
-    setContent("")
-    setTags([])
-    setTagInput("")
-    setIsProject(false)
-    onOpenChange(false)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      const fullContent = `${title}\n\n${content}${tags.length > 0 ? `\n\nTags: ${tags.join(", ")}` : ""}`
+
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: fullContent,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to create post")
+      }
+
+      // Reset form on success
+      setTitle("")
+      setContent("")
+      setTags([])
+      setTagInput("")
+      setIsProject(false)
+      onOpenChange(false)
+
+      // Refresh the page to show the new post
+      window.location.reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -56,6 +86,12 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -129,11 +165,11 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90">
-              Post Idea
+            <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+              {isSubmitting ? "Posting..." : "Post Idea"}
             </Button>
           </div>
         </form>

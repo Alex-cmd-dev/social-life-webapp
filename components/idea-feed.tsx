@@ -1,60 +1,99 @@
-import { IdeaCard } from "@/components/idea-card"
+"use client"
 
-// Mock data for demonstration
-const mockIdeas = [
-  {
-    id: "1",
-    author: {
-      name: "Sarah Chen",
-      username: "sarahchen",
-      avatar: "/placeholder.svg",
-    },
-    title: "AI-Powered Recipe Generator",
-    content:
-      "An app that generates personalized recipes based on ingredients you have at home, dietary restrictions, and cooking skill level. Uses computer vision to identify ingredients from photos.",
-    tags: ["AI", "Food Tech", "Mobile App"],
-    likes: 42,
-    comments: 12,
-    timestamp: "2h ago",
-  },
-  {
-    id: "2",
-    author: {
-      name: "Marcus Johnson",
-      username: "marcusj",
-      avatar: "/placeholder.svg",
-    },
-    title: "Sustainable Fashion Marketplace",
-    content:
-      "A platform connecting sustainable fashion brands with conscious consumers. Features carbon footprint tracking, material transparency, and a resale marketplace for extending garment lifecycles.",
-    tags: ["Sustainability", "E-commerce", "Fashion"],
-    likes: 87,
-    comments: 23,
-    timestamp: "5h ago",
-  },
-  {
-    id: "3",
-    author: {
-      name: "Alex Rivera",
-      username: "alexr",
-      avatar: "/placeholder.svg",
-    },
-    title: "Local Community Skill Exchange",
-    content:
-      "A neighborhood-based app where people can trade skills instead of money. Learn guitar from your neighbor while teaching them web design. Builds community and reduces costs.",
-    tags: ["Community", "Education", "Social Impact"],
-    likes: 156,
-    comments: 34,
-    timestamp: "1d ago",
-  },
-]
+import { useEffect, useState } from "react"
+import { IdeaCard } from "@/components/idea-card"
+import { formatDistanceToNow } from "date-fns"
+
+interface Post {
+  id: string
+  content: string
+  imageUrl: string | null
+  userId: string
+  projectId: string | null
+  createdAt: string
+  updatedAt: string
+  user: {
+    id: string
+    name: string | null
+    image: string | null
+  }
+  likes: any[]
+  comments: any[]
+  _count: {
+    likes: number
+    comments: number
+  }
+}
 
 export function IdeaFeed() {
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        const response = await fetch("/api/posts")
+        if (!response.ok) {
+          throw new Error("Failed to fetch posts")
+        }
+        const data = await response.json()
+        setPosts(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPosts()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8 text-muted-foreground">Loading posts...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8 text-destructive">Error: {error}</div>
+      </div>
+    )
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8 text-muted-foreground">
+          No posts yet. Be the first to share an idea!
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      {mockIdeas.map((idea) => (
-        <IdeaCard key={idea.id} idea={idea} />
-      ))}
+      {posts.map((post) => {
+        const idea = {
+          id: post.id,
+          author: {
+            name: post.user.name || "Anonymous",
+            username: post.user.id,
+            avatar: post.user.image || "/placeholder.svg",
+          },
+          title: post.content.split("\n")[0].substring(0, 100),
+          content: post.content,
+          tags: [],
+          likes: post._count.likes,
+          comments: post._count.comments,
+          timestamp: formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }),
+        }
+        return <IdeaCard key={post.id} idea={idea} />
+      })}
     </div>
   )
 }

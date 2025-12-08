@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Heart, MessageCircle, Share2, Bookmark } from "lucide-react"
@@ -22,6 +25,63 @@ interface IdeaCardProps {
 }
 
 export function IdeaCard({ idea }: IdeaCardProps) {
+  const [liked, setLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(idea.likes)
+  const [bookmarked, setBookmarked] = useState(false)
+
+  const handleLike = async () => {
+    try {
+      if (liked) {
+        // Unlike
+        const response = await fetch(`/api/likes/${idea.id}`, {
+          method: "DELETE",
+        })
+        if (response.ok) {
+          setLiked(false)
+          setLikeCount(prev => prev - 1)
+        }
+      } else {
+        // Like
+        const response = await fetch(`/api/likes/${idea.id}`, {
+          method: "POST",
+        })
+        if (response.ok) {
+          setLiked(true)
+          setLikeCount(prev => prev + 1)
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error)
+    }
+  }
+
+  const handleBookmark = async () => {
+    try {
+      if (bookmarked) {
+        // Remove bookmark
+        const response = await fetch(`/api/bookmarks/${idea.id}`, {
+          method: "DELETE",
+        })
+        if (response.ok) {
+          setBookmarked(false)
+        }
+      } else {
+        // Add bookmark
+        const response = await fetch("/api/bookmarks", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ postId: idea.id }),
+        })
+        if (response.ok) {
+          setBookmarked(true)
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling bookmark:", error)
+    }
+  }
   return (
     <Card className="p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-start gap-4">
@@ -60,9 +120,14 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           </div>
 
           <div className="flex items-center gap-6">
-            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
-              <Heart className="h-4 w-4" />
-              <span>{idea.likes}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`gap-2 ${liked ? "text-red-500" : "text-muted-foreground hover:text-primary"}`}
+              onClick={handleLike}
+            >
+              <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
+              <span>{likeCount}</span>
             </Button>
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
               <MessageCircle className="h-4 w-4" />
@@ -71,8 +136,13 @@ export function IdeaCard({ idea }: IdeaCardProps) {
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground hover:text-primary">
-              <Bookmark className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`ml-auto ${bookmarked ? "text-blue-500" : "text-muted-foreground hover:text-primary"}`}
+              onClick={handleBookmark}
+            >
+              <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
             </Button>
           </div>
         </div>

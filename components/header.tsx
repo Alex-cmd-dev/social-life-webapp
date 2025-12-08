@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Search, User, LogOut } from "lucide-react"
+import { Search, User, LogOut, Package } from "lucide-react"
 
 export function Header() {
   const { data: session, status } = useSession()
@@ -13,14 +13,14 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">IB</span>
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+              <Package className="h-5 w-5 text-white" />
             </div>
             <span className="font-bold text-xl">IdeaBox</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/feed" className="text-sm font-medium hover:text-primary transition-colors">
               Feed
             </Link>
             <Link
