@@ -27,10 +27,41 @@ interface UserProfileProps {
 export function UserProfile({ user }: UserProfileProps) {
   const [isFollowing, setIsFollowing] = useState(user.isFollowing)
   const [followers, setFollowers] = useState(user.stats.followers)
+  const [loading, setLoading] = useState(false)
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing)
-    setFollowers(isFollowing ? followers - 1 : followers + 1)
+  const handleFollow = async () => {
+    setLoading(true)
+    try {
+      if (isFollowing) {
+        // Unfollow
+        const response = await fetch(`/api/follows/${user.username}`, {
+          method: "DELETE",
+        })
+        if (response.ok) {
+          setIsFollowing(false)
+          setFollowers(prev => prev - 1)
+        }
+      } else {
+        // Follow
+        const response = await fetch("/api/follows", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            followingId: user.username,
+          }),
+        })
+        if (response.ok) {
+          setIsFollowing(true)
+          setFollowers(prev => prev + 1)
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -53,10 +84,11 @@ export function UserProfile({ user }: UserProfileProps) {
 
             <Button
               onClick={handleFollow}
+              disabled={loading}
               className={
                 isFollowing
                   ? "bg-background border border-primary text-primary hover:bg-primary/10"
-                  : "bg-primary hover:bg-primary/90"
+                  : "bg-gradient-to-br from-purple-600 to-pink-600"
               }
             >
               {isFollowing ? (
