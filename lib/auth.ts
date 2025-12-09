@@ -22,7 +22,11 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "you@example.com" },
+        email: {
+          label: "Email",
+          type: "email",
+          placeholder: "you@example.com",
+        },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
@@ -63,6 +67,7 @@ export const authOptions: NextAuthOptions = {
   // Custom pages for authentication
   pages: {
     signIn: "/auth/signin",
+    signOut: "/",
     // error: '/auth/error',
   },
 

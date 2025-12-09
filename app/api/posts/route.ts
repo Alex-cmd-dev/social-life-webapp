@@ -26,13 +26,54 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = parseInt(searchParams.get("offset") || "0");
+    const userId = searchParams.get("userId");
+    const following = searchParams.get("following") === "true";
+    const search = searchParams.get("search");
+
+    // Build where clause
+    let whereClause: any = {};
+
+    // Filter by search query
+    if (search) {
+      whereClause.content = {
+        contains: search,
+        mode: "insensitive",
+      };
+    }
+
+    // Filter by specific user
+    if (userId) {
+      whereClause.userId = userId;
+    }
+
+    // Filter by following (only show posts from users I follow)
+    if (following) {
+      const session = await requireAuth();
+      if (session instanceof NextResponse) return session;
+
+      // Get list of users the current user follows
+      const followingList = await prisma.follow.findMany({
+        where: { followerId: session.user.id },
+        select: { followingId: true },
+      });
+
+      const followingIds = followingList.map((f) => f.followingId);
+
+      // If not following anyone, return empty array
+      if (followingIds.length === 0) {
+        return NextResponse.json([]);
+      }
+
+      whereClause.userId = { in: followingIds };
+    }
 
     // Query database using Prisma
     const posts = await prisma.post.findMany({
-      take: limit,      // How many posts to get
-      skip: offset,     // How many to skip (for pagination)
+      where: whereClause,
+      take: limit, // How many posts to get
+      skip: offset, // How many to skip (for pagination)
       orderBy: {
-        createdAt: "desc"  // Newest first
+        createdAt: "desc", // Newest first
       },
       // Include related data (JOIN in SQL)
       include: {
@@ -42,22 +83,29 @@ export async function GET(request: NextRequest) {
             name: true,
             username: true,
             image: true,
-          }
+          },
         },
-        likes: true,      // Include all likes
-        comments: true,   // Include all comments
+        project: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+        },
+        likes: true, // Include all likes
+        comments: true, // Include all comments
+        bookmarks: true, // Include all bookmarks
         _count: {
           select: {
             likes: true,
             comments: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // Return the posts as JSON
     return NextResponse.json(posts);
-
   } catch (error) {
     console.error("Error fetching posts:", error);
     return NextResponse.json(
@@ -104,7 +152,7 @@ export async function POST(request: NextRequest) {
         content: content.trim(),
         imageUrl: imageUrl || null,
         projectId: projectId || null,
-        userId: session.user.id,  // Current logged-in user
+        userId: session.user.id, // Current logged-in user
       },
       // Include user data in the response
       include: {
@@ -114,14 +162,13 @@ export async function POST(request: NextRequest) {
             name: true,
             username: true,
             image: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // STEP 5: Return the created post
     return NextResponse.json(post, { status: 201 });
-
   } catch (error) {
     console.error("Error creating post:", error);
     return NextResponse.json(

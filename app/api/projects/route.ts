@@ -9,10 +9,29 @@ export async function GET(request: NextRequest) {
         return session;
     }
     try {
+        // Check if filtering by userId (from query params)
+        const { searchParams } = new URL(request.url);
+        const userId = searchParams.get("userId");
+        const search = searchParams.get("search");
+        
+        const whereClause: any = {};
+
+        if (userId) {
+            whereClause.userId = userId;
+        }
+
+        if (search) {
+            whereClause.OR = [
+                { title: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+            ];
+        }
+        
         const projects = await prisma.project.findMany({
-            where: {},
-            include: {user: { select: { id: true, name: true, username: true, image: true } },
-            updates: { select: { id: true, title: true, createdAt: true} },
+            where: whereClause,
+            include: {
+                user: { select: { id: true, name: true, username: true, image: true } },
+                updates: { select: { id: true, title: true, createdAt: true} },
             },
             orderBy: { createdAt: "desc" },
         });

@@ -2,14 +2,17 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { X, Plus } from "lucide-react"
+import { CreateProjectDialog } from "./create-project-dialog"
 
 interface CreateIdeaDialogProps {
   open: boolean
@@ -17,11 +20,16 @@ interface CreateIdeaDialogProps {
 }
 
 export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) {
+  const { data: session } = useSession()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [tagInput, setTagInput] = useState("")
   const [tags, setTags] = useState<string[]>([])
   const [isProject, setIsProject] = useState(false)
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("")
+  const [projects, setProjects] = useState<any[]>([])
+  const [loadingProjects, setLoadingProjects] = useState(false)
+  const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -37,13 +45,34 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Fetch user's projects when dialog opens and isProject is checked
+  useEffect(() => {
+    if (open && isProject && session?.user?.id) {
+      setLoadingProjects(true)
+      // Fetch only the current user's projects
+      fetch(`/api/projects?userId=${session.user.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setProjects(Array.isArray(data) ? data : [])
+        })
+        .catch((err) => {
+          console.error("Failed to fetch projects:", err)
+          setProjects([])
+        })
+        .finally(() => {
+          setLoadingProjects(false)
+        })
+    }
+  }, [open, isProject, session?.user?.id])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
     try {
-      const fullContent = `${title}\n\n${content}${tags.length > 0 ? `\n\nTags: ${tags.join(", ")}` : ""}`
+      // Store tags as metadata in content (will be parsed by feed components)
+      const fullContent = `${content}${tags.length > 0 ? `\n\n#tags: ${tags.join(", ")}` : ""}`
 
       const response = await fetch("/api/posts", {
         method: "POST",
@@ -52,6 +81,7 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
         },
         body: JSON.stringify({
           content: fullContent,
+          projectId: isProject && selectedProjectId ? selectedProjectId : null,
         }),
       })
 
@@ -66,6 +96,7 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
       setTags([])
       setTagInput("")
       setIsProject(false)
+      setSelectedProjectId("")
       onOpenChange(false)
 
       // Refresh the page to show the new post
@@ -77,8 +108,21 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
     }
   }
 
+  const handleProjectCreated = (newProject: any) => {
+    // Add new project to the list and auto-select it
+    setProjects([newProject, ...projects])
+    setSelectedProjectId(newProject.id)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <CreateProjectDialog
+        open={createProjectDialogOpen}
+        onOpenChange={setCreateProjectDialogOpen}
+        onProjectCreated={handleProjectCreated}
+      />
+      
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="text-2xl">Share Your Idea</DialogTitle>
@@ -153,15 +197,64 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
             )}
           </div>
 
-          <div className="flex items-center space-x-2 pt-2">
-            <Checkbox
-              id="isProject"
-              checked={isProject}
-              onCheckedChange={(checked) => setIsProject(checked === true)}
-            />
-            <Label htmlFor="isProject" className="text-sm font-normal cursor-pointer">
-              Mark as project (enables roadmap and progress tracking)
-            </Label>
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isProject"
+                checked={isProject}
+                onCheckedChange={(checked) => setIsProject(checked === true)}
+              />
+              <Label htmlFor="isProject" className="text-sm font-normal cursor-pointer">
+                Link to existing project (enables roadmap and progress tracking)
+              </Label>
+            </div>
+
+            {isProject && (
+              <div className="space-y-2 pl-6">
+                <Label htmlFor="project">Select Project</Label>
+                {loadingProjects ? (
+                  <p className="text-sm text-muted-foreground">Loading projects...</p>
+                ) : projects.length === 0 ? (
+                  <div className="text-sm text-muted-foreground space-y-2">
+                    <p>You don't have any projects yet.</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCreateProjectDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Project
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a project..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCreateProjectDialogOpen(true)}
+                      className="mt-2"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Project
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
@@ -175,5 +268,6 @@ export function CreateIdeaDialog({ open, onOpenChange }: CreateIdeaDialogProps) 
         </form>
       </DialogContent>
     </Dialog>
+    </>
   )
 }

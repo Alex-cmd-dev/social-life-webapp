@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { IdeaCard } from "@/components/idea-card"
 import { formatDistanceToNow } from "date-fns"
 
@@ -17,8 +18,14 @@ interface Post {
     name: string | null
     image: string | null
   }
+  project?: {
+    id: string
+    title: string
+    status: string
+  } | null
   likes: any[]
   comments: any[]
+  bookmarks?: any[]
   _count: {
     likes: number
     comments: number
@@ -26,28 +33,38 @@ interface Post {
 }
 
 export function IdeaFeed() {
+  const { data: session } = useSession()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        const response = await fetch("/api/posts")
-        if (!response.ok) {
-          throw new Error("Failed to fetch posts")
-        }
-        const data = await response.json()
-        setPosts(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred")
-      } finally {
-        setLoading(false)
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch("/api/posts")
+      if (!response.ok) {
+        throw new Error("Failed to fetch posts")
       }
+      const data = await response.json()
+      setPosts(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchPosts()
   }, [])
+
+  const handleUpdate = () => {
+    setLoading(true)
+    fetchPosts()
+  }
+
+  const handleDelete = (deletedPostId: string) => {
+    setPosts(posts.filter(post => post.id !== deletedPostId))
+  }
 
   if (loading) {
     return (
@@ -78,6 +95,13 @@ export function IdeaFeed() {
   return (
     <div className="space-y-6">
       {posts.map((post) => {
+        // Parse tags from content
+        const tagsMatch = post.content.match(/#tags:\s*(.+)$/m)
+        const tags = tagsMatch ? tagsMatch[1].split(',').map(t => t.trim()) : []
+        
+        // Remove tags line from content
+        const cleanContent = post.content.replace(/#tags:\s*.+$/m, '').trim()
+        
         const idea = {
           id: post.id,
           author: {
@@ -85,14 +109,25 @@ export function IdeaFeed() {
             username: post.user.id,
             avatar: post.user.image || "/placeholder.svg",
           },
-          title: post.content.split("\n")[0].substring(0, 100),
-          content: post.content,
-          tags: [],
+          title: cleanContent.split("\n")[0].substring(0, 100),
+          content: cleanContent,
+          tags: tags,
           likes: post._count.likes,
           comments: post._count.comments,
           timestamp: formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }),
+          isLiked: post.likes?.some((like: any) => like.userId === session?.user?.id) || false,
+          isBookmarked: post.bookmarks?.some((bookmark: any) => bookmark.userId === session?.user?.id) || false,
+          project: post.project,
         }
-        return <IdeaCard key={post.id} idea={idea} />
+        return (
+          <IdeaCard
+            key={post.id}
+            idea={idea}
+            currentUserId={session?.user?.id}
+            onUpdate={handleUpdate}
+            onDelete={() => handleDelete(post.id)}
+          />
+        )
       })}
     </div>
   )

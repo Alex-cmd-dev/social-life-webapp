@@ -1,47 +1,54 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Header } from "@/components/header"
-import { IdeaDetail } from "@/components/idea-detail"
-import { CommentSection } from "@/components/comment-section"
-import { ProjectRoadmap } from "@/components/project-roadmap"
-import { PostUpdateDialog } from "@/components/post-update-dialog"
-import { formatDistanceToNow } from "date-fns"
+import { use, useState, useEffect } from "react";
+import { Header } from "@/components/header";
+import { IdeaDetail } from "@/components/idea-detail";
+import { CommentSection } from "@/components/comment-section";
+import { ProjectRoadmap } from "@/components/project-roadmap";
+import { PostUpdateDialog } from "@/components/post-update-dialog";
+import { formatDistanceToNow } from "date-fns";
 
-export default function IdeaPage({ params }: { params: { id: string } }) {
-  const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
-  const [post, setPost] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export default function IdeaPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchPost() {
       try {
-        const response = await fetch(`/api/posts/${params.id}`)
+        const response = await fetch(`/api/posts/${id}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch post")
+          throw new Error("Failed to fetch post");
         }
-        const data = await response.json()
-        setPost(data)
+        const data = await response.json();
+        setPost(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred")
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchPost()
-  }, [params.id])
+    fetchPost();
+  }, [id]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="text-center py-8 text-muted-foreground">Loading post...</div>
+          <div className="text-center py-8 text-muted-foreground">
+            Loading post...
+          </div>
         </main>
       </div>
-    )
+    );
   }
 
   if (error || !post) {
@@ -49,10 +56,12 @@ export default function IdeaPage({ params }: { params: { id: string } }) {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="text-center py-8 text-destructive">Error: {error || "Post not found"}</div>
+          <div className="text-center py-8 text-destructive">
+            Error: {error || "Post not found"}
+          </div>
         </main>
       </div>
-    )
+    );
   }
 
   const idea = {
@@ -67,15 +76,17 @@ export default function IdeaPage({ params }: { params: { id: string } }) {
     tags: [],
     likes: post._count?.likes || 0,
     comments: post._count?.comments || 0,
-    timestamp: formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }),
+    timestamp: formatDistanceToNow(new Date(post.createdAt), {
+      addSuffix: true,
+    }),
     isLiked: false,
     isBookmarked: false,
     isProject: false,
     isFollowingProject: false,
-  }
+  };
 
-  const roadmapUpdates: any[] = []
-  const isOwner = false
+  const roadmapUpdates: any[] = [];
+  const isOwner = false;
 
   return (
     <div className="min-h-screen bg-background">
@@ -93,7 +104,7 @@ export default function IdeaPage({ params }: { params: { id: string } }) {
           />
         )}
 
-        <CommentSection ideaId={params.id} />
+        <CommentSection ideaId={id} />
 
         <PostUpdateDialog
           open={updateDialogOpen}
@@ -103,5 +114,5 @@ export default function IdeaPage({ params }: { params: { id: string } }) {
         />
       </main>
     </div>
-  )
+  );
 }

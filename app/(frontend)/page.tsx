@@ -1,22 +1,28 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Package, Lightbulb, Users, TrendingUp, ArrowRight } from "lucide-react"
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Package,
+  Lightbulb,
+  Users,
+  TrendingUp,
+  ArrowRight,
+} from "lucide-react";
 
 export default function LandingPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     // Redirect authenticated users to feed
-    if (session) {
-      router.push("/feed")
+    if (status === "authenticated" && session) {
+      router.push("/feed");
     }
-  }, [session, router])
+  }, [status, session, router]);
 
   if (status === "loading") {
     return (
@@ -28,7 +34,7 @@ export default function LandingPage() {
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Show landing page for unauthenticated users
@@ -46,10 +52,15 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-3">
               <Link href="/auth/signin">
-                <Button variant="ghost" size="sm">Sign In</Button>
+                <Button variant="ghost" size="sm">
+                  Sign In
+                </Button>
               </Link>
               <Link href="/auth/signup">
-                <Button size="sm" className="bg-gradient-to-br from-purple-600 to-pink-600">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-br from-purple-600 to-pink-600"
+                >
                   Sign Up
                 </Button>
               </Link>
@@ -71,17 +82,25 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-              IdeaBox is the platform where creativity meets community. Share your ideas, get valuable feedback, and follow inspiring projects.
+              IdeaBox is the platform where creativity meets community. Share
+              your ideas, get valuable feedback, and follow inspiring projects.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
               <Link href="/auth/signup">
-                <Button size="lg" className="bg-gradient-to-br from-purple-600 to-pink-600 px-8 text-lg h-12">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-br from-purple-600 to-pink-600 px-8 text-lg h-12"
+                >
                   Get Started <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/auth/signin">
-                <Button size="lg" variant="outline" className="px-8 text-lg h-12">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="px-8 text-lg h-12"
+                >
                   Sign In
                 </Button>
               </Link>
@@ -95,7 +114,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Share Ideas</h3>
                 <p className="text-muted-foreground text-sm">
-                  Post your innovative ideas and projects to inspire others and get constructive feedback.
+                  Post your innovative ideas and projects to inspire others and
+                  get constructive feedback.
                 </p>
               </div>
 
@@ -105,7 +125,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Build Community</h3>
                 <p className="text-muted-foreground text-sm">
-                  Connect with like-minded creators, collaborate, and grow together in a supportive community.
+                  Connect with like-minded creators, collaborate, and grow
+                  together in a supportive community.
                 </p>
               </div>
 
@@ -115,7 +136,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Track Progress</h3>
                 <p className="text-muted-foreground text-sm">
-                  Follow projects you love, track their progress, and celebrate milestones together.
+                  Follow projects you love, track their progress, and celebrate
+                  milestones together.
                 </p>
               </div>
             </div>
@@ -139,8 +161,8 @@ export default function LandingPage() {
           </div>
         </footer>
       </div>
-    )
+    );
   }
 
-  return null
+  return null;
 }

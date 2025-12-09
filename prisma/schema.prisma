@@ -51,6 +51,7 @@ model User {
   following     Follow[]       @relation("UserFollowing")  // Users this user is following
   projects      Project[]      // Projects created by this user
   projectUpdates ProjectUpdate[] // Project updates posted by this user
+  projectFollows ProjectFollow[] // Projects this user is following
 
   @@index([email])
   @@index([username])
@@ -196,9 +197,31 @@ model Project {
 
   posts       Post[]        // Posts related to this project
   updates     ProjectUpdate[] // Timeline updates for this project
+  followers   ProjectFollow[] // Users following this project
 
   @@index([userId])
   @@index([status])
+}
+
+// ============================================
+// ProjectFollow Model
+// ============================================
+// Represents a user following a project
+model ProjectFollow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Ensure a user can only follow a project once
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
 }
 
 // ============================================

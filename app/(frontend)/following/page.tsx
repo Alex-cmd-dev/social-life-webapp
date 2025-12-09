@@ -1,17 +1,13 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Header } from "@/components/header"
-import { IdeaFeed } from "@/components/idea-feed"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { FolderKanban, Users } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+import { useState } from "react";
+import { Header } from "@/components/header";
+import { FollowingFeed } from "@/components/following-feed";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FolderKanban, Users } from "lucide-react";
 
 export default function FollowingPage() {
-  const [activeTab, setActiveTab] = useState("all")
+  const [activeTab, setActiveTab] = useState("all");
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,22 +34,24 @@ export default function FollowingPage() {
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            <IdeaFeed />
+            <FollowingFeed />
           </TabsContent>
 
           <TabsContent value="people" className="mt-6">
-            <IdeaFeed />
+            <FollowingFeed />
           </TabsContent>
 
           <TabsContent value="projects" className="mt-6">
             <div className="text-center py-12 text-muted-foreground">
               <FolderKanban className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg">No projects yet</p>
-              <p className="text-sm mt-2">Follow projects to see their updates here</p>
+              <p className="text-sm mt-2">
+                Follow projects to see their updates here
+              </p>
             </div>
           </TabsContent>
         </Tabs>
       </main>
     </div>
-  )
+  );
 }
