@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = parseInt(searchParams.get("offset") || "0");
     const userId = searchParams.get("userId");
+    const projectId = searchParams.get("projectId");
     const following = searchParams.get("following") === "true";
     const search = searchParams.get("search");
 
@@ -44,6 +45,11 @@ export async function GET(request: NextRequest) {
     // Filter by specific user
     if (userId) {
       whereClause.userId = userId;
+    }
+
+    // Filter by specific project
+    if (projectId) {
+      whereClause.projectId = projectId;
     }
 
     // Filter by following (only show posts from users I follow)

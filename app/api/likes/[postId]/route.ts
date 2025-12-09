@@ -12,7 +12,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-type Ctx = { params: { postId: string } };
+type Ctx = { params: Promise<{ postId: string }> };
 
 /**
  * POST /api/likes/[postId]
@@ -21,6 +21,7 @@ type Ctx = { params: { postId: string } };
  * Requires authentication
  */
 export async function POST(request: NextRequest, { params }: Ctx) {
+  const { postId } = await params;
   const session = await getServerSession(authOptions);
   // @ts-ignore
   const userId = session?.user?.id as string | undefined;
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
   try {
     // Check if post exists
     const post = await prisma.post.findUnique({
-      where: { id: params.postId }
+      where: { id: postId }
     });
 
     if (!post) {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     const existingLike = await prisma.like.findUnique({
       where: {
         postId_userId: {
-          postId: params.postId,
+          postId: postId,
           userId: userId
         }
       }
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     // Create the like
     const like = await prisma.like.create({
       data: { 
-        postId: params.postId,
+        postId: postId,
         userId 
       },
     });
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
  * Requires authentication
  */
 export async function DELETE(request: NextRequest, { params }: Ctx) {
+  const { postId } = await params;
   const session = await getServerSession(authOptions);
   // @ts-ignore
   const userId = session?.user?.id as string | undefined;
@@ -91,7 +93,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
     const existingLike = await prisma.like.findUnique({
       where: {
         postId_userId: {
-          postId: params.postId,
+          postId: postId,
           userId: userId
         }
       }
@@ -108,7 +110,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
     await prisma.like.delete({
       where: {
         postId_userId: {
-          postId: params.postId,
+          postId: postId,
           userId: userId
         }
       }

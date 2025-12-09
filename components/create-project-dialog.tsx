@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 interface CreateProjectDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onProjectCreated?: (project: any) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onProjectCreated?: (project: any) => void;
 }
 
 export function CreateProjectDialog({
@@ -32,16 +32,16 @@ export function CreateProjectDialog({
   onOpenChange,
   onProjectCreated,
 }: CreateProjectDialogProps) {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [status, setStatus] = useState("IDEA")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("IDEA");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/projects", {
@@ -54,31 +54,31 @@ export function CreateProjectDialog({
           description,
           status,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to create project")
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create project");
       }
 
-      const newProject = await response.json()
+      const newProject = await response.json();
 
       // Reset form
-      setTitle("")
-      setDescription("")
-      setStatus("IDEA")
-      onOpenChange(false)
+      setTitle("");
+      setDescription("");
+      setStatus("IDEA");
+      onOpenChange(false);
 
       // Notify parent component
       if (onProjectCreated) {
-        onProjectCreated(newProject)
+        onProjectCreated(newProject);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,6 +158,5 @@ export function CreateProjectDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
