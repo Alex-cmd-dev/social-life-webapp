@@ -1,38 +1,38 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
-import { Header } from "@/components/header"
-import { IdeaCard } from "@/components/idea-card"
-import { formatDistanceToNow } from "date-fns"
-import { Bookmark } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { Header } from "@/components/header";
+import { IdeaCard } from "@/components/idea-card";
+import { formatDistanceToNow } from "date-fns";
+import { Bookmark } from "lucide-react";
 
 export default function BookmarksPage() {
-  const { data: session, status } = useSession()
-  const [bookmarks, setBookmarks] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: session, status } = useSession();
+  const [bookmarks, setBookmarks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "authenticated") {
-      fetchBookmarks()
+      fetchBookmarks();
     } else if (status === "unauthenticated") {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [status])
+  }, [status]);
 
   async function fetchBookmarks() {
     try {
-      const response = await fetch("/api/bookmarks")
+      const response = await fetch("/api/bookmarks");
       if (!response.ok) {
-        throw new Error("Failed to fetch bookmarks")
+        throw new Error("Failed to fetch bookmarks");
       }
-      const data = await response.json()
-      setBookmarks(data.bookmarks || [])
+      const data = await response.json();
+      setBookmarks(data.bookmarks || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -41,10 +41,12 @@ export default function BookmarksPage() {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="text-center py-8 text-muted-foreground">Loading bookmarks...</div>
+          <div className="text-center py-8 text-muted-foreground">
+            Loading bookmarks...
+          </div>
         </main>
       </div>
-    )
+    );
   }
 
   if (status === "unauthenticated") {
@@ -54,12 +56,16 @@ export default function BookmarksPage() {
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="text-center py-12">
             <Bookmark className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-2xl font-bold mb-2">Sign in to view bookmarks</h2>
-            <p className="text-muted-foreground">You need to be signed in to save and view bookmarked posts.</p>
+            <h2 className="text-2xl font-bold mb-2">
+              Sign in to view bookmarks
+            </h2>
+            <p className="text-muted-foreground">
+              You need to be signed in to save and view bookmarked posts.
+            </p>
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -67,21 +73,27 @@ export default function BookmarksPage() {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="text-center py-8 text-destructive">Error: {error}</div>
+          <div className="text-center py-8 text-destructive">
+            Error: {error}
+          </div>
         </main>
       </div>
-    )
+    );
   }
 
   // Transform bookmarks to idea card format
   const ideas = bookmarks.map((bookmark: any) => {
     // Parse tags from content
-    const tagsMatch = bookmark.post.content.match(/#tags:\s*(.+)$/m)
-    const tags = tagsMatch ? tagsMatch[1].split(',').map((t: string) => t.trim()) : []
-    
+    const tagsMatch = bookmark.post.content.match(/#tags:\s*(.+)$/m);
+    const tags = tagsMatch
+      ? tagsMatch[1].split(",").map((t: string) => t.trim())
+      : [];
+
     // Remove tags line from content
-    const cleanContent = bookmark.post.content.replace(/#tags:\s*.+$/m, '').trim()
-    
+    const cleanContent = bookmark.post.content
+      .replace(/#tags:\s*.+$/m, "")
+      .trim();
+
     return {
       id: bookmark.post.id,
       author: {
@@ -94,11 +106,13 @@ export default function BookmarksPage() {
       tags: tags,
       likes: bookmark.post._count?.likes || 0,
       comments: bookmark.post._count?.comments || 0,
-      timestamp: formatDistanceToNow(new Date(bookmark.post.createdAt), { addSuffix: true }),
+      timestamp: formatDistanceToNow(new Date(bookmark.post.createdAt), {
+        addSuffix: true,
+      }),
       isBookmarked: true, // Always true on bookmarks page
       project: bookmark.post.project,
-    }
-  })
+    };
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,12 +148,14 @@ export default function BookmarksPage() {
                   fetchBookmarks();
                 }}
                 onDelete={() => {
-                  setBookmarks(bookmarks.filter(b => b.post.id !== idea.id));
+                  setBookmarks(bookmarks.filter((b) => b.post.id !== idea.id));
                 }}
                 onBookmarkChange={(isBookmarked) => {
                   if (!isBookmarked) {
                     // Remove from bookmarks list immediately when unbookmarked
-                    setBookmarks(bookmarks.filter(b => b.post.id !== idea.id));
+                    setBookmarks(
+                      bookmarks.filter((b) => b.post.id !== idea.id)
+                    );
                   }
                 }}
               />
@@ -148,6 +164,5 @@ export default function BookmarksPage() {
         )}
       </main>
     </div>
-  )
+  );
 }
-

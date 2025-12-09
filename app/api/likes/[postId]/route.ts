@@ -1,9 +1,9 @@
 /**
  * Like API Route
- * 
+ *
  * POST /api/likes/[postId] - Like a post
  * DELETE /api/likes/[postId] - Unlike a post
- * 
+ *
  * This matches the API specification at /api/likes/{postId}
  */
 
@@ -16,7 +16,7 @@ type Ctx = { params: Promise<{ postId: string }> };
 
 /**
  * POST /api/likes/[postId]
- * 
+ *
  * Like a post
  * Requires authentication
  */
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
   // @ts-ignore
   const userId = session?.user?.id as string | undefined;
-  
+
   if (!userId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
   try {
     // Check if post exists
     const post = await prisma.post.findUnique({
-      where: { id: postId }
+      where: { id: postId },
     });
 
     if (!post) {
@@ -45,23 +45,23 @@ export async function POST(request: NextRequest, { params }: Ctx) {
       where: {
         postId_userId: {
           postId: postId,
-          userId: userId
-        }
-      }
+          userId: userId,
+        },
+      },
     });
 
     if (existingLike) {
       return NextResponse.json(
-        { error: "Already liked this post" }, 
+        { error: "Already liked this post" },
         { status: 400 }
       );
     }
 
     // Create the like
     const like = await prisma.like.create({
-      data: { 
+      data: {
         postId: postId,
-        userId 
+        userId,
       },
     });
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
 
 /**
  * DELETE /api/likes/[postId]
- * 
+ *
  * Unlike a post (remove like)
  * Requires authentication
  */
@@ -83,7 +83,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
   // @ts-ignore
   const userId = session?.user?.id as string | undefined;
-  
+
   if (!userId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
@@ -94,16 +94,13 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
       where: {
         postId_userId: {
           postId: postId,
-          userId: userId
-        }
-      }
+          userId: userId,
+        },
+      },
     });
 
     if (!existingLike) {
-      return NextResponse.json(
-        { error: "Like not found" }, 
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Like not found" }, { status: 404 });
     }
 
     // Delete the like
@@ -111,15 +108,17 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
       where: {
         postId_userId: {
           postId: postId,
-          userId: userId
-        }
-      }
+          userId: userId,
+        },
+      },
     });
 
     return NextResponse.json({ message: "Like removed" }, { status: 200 });
   } catch (e) {
     console.error("Error unliking post:", e);
-    return NextResponse.json({ error: "Could not unlike post" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Could not unlike post" },
+      { status: 500 }
+    );
   }
 }
-

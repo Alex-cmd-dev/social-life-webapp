@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { use, useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
-import { Header } from "@/components/header"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { IdeaCard } from "@/components/idea-card"
-import { 
-  Folder, 
+import { use, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { Header } from "@/components/header";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { IdeaCard } from "@/components/idea-card";
+import {
+  Folder,
   Calendar,
   ExternalLink,
   Github,
@@ -17,17 +17,17 @@ import {
   Trash2,
   ArrowLeft,
   UserPlus,
-  UserCheck
-} from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { formatDistanceToNow } from "date-fns"
+  UserCheck,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
 const statusEmojis: Record<string, string> = {
   IDEA: "💡",
@@ -36,7 +36,7 @@ const statusEmojis: Record<string, string> = {
   COMPLETED: "✅",
   ON_HOLD: "⏸️",
   CANCELLED: "❌",
-}
+};
 
 const statusColors: Record<string, string> = {
   IDEA: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
@@ -45,74 +45,74 @@ const statusColors: Record<string, string> = {
   COMPLETED: "bg-green-500/10 text-green-600 border-green-500/20",
   ON_HOLD: "bg-gray-500/10 text-gray-600 border-gray-500/20",
   CANCELLED: "bg-red-500/10 text-red-600 border-red-500/20",
-}
+};
 
 export default function ProjectDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params)
-  const { data: session } = useSession()
-  const router = useRouter()
-  const [project, setProject] = useState<any>(null)
-  const [posts, setPosts] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isFollowing, setIsFollowing] = useState(false)
-  const [followLoading, setFollowLoading] = useState(false)
+  const { id } = use(params);
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [project, setProject] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   useEffect(() => {
-    fetchProjectData()
-    checkFollowStatus()
-  }, [id, session?.user?.id])
+    fetchProjectData();
+    checkFollowStatus();
+  }, [id, session?.user?.id]);
 
   const fetchProjectData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       // Fetch project details
-      const projectRes = await fetch(`/api/projects/${id}`)
-      if (!projectRes.ok) throw new Error("Project not found")
-      const projectData = await projectRes.json()
-      setProject(projectData)
+      const projectRes = await fetch(`/api/projects/${id}`);
+      if (!projectRes.ok) throw new Error("Project not found");
+      const projectData = await projectRes.json();
+      setProject(projectData);
 
       // Fetch posts related to this project
-      const postsRes = await fetch(`/api/posts?projectId=${id}`)
+      const postsRes = await fetch(`/api/posts?projectId=${id}`);
       if (postsRes.ok) {
-        const postsData = await postsRes.json()
-        setPosts(postsData)
+        const postsData = await postsRes.json();
+        setPosts(postsData);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load project")
+      setError(err instanceof Error ? err.message : "Failed to load project");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const checkFollowStatus = async () => {
-    if (!session?.user?.id) return
+    if (!session?.user?.id) return;
     try {
-      const res = await fetch(`/api/projectfollows?projectId=${id}`)
+      const res = await fetch(`/api/projectfollows?projectId=${id}`);
       if (res.ok) {
-        const data = await res.json()
-        setIsFollowing(data.isFollowing || false)
+        const data = await res.json();
+        setIsFollowing(data.isFollowing || false);
       }
     } catch (err) {
-      console.error("Error checking follow status:", err)
+      console.error("Error checking follow status:", err);
     }
-  }
+  };
 
   const handleFollow = async () => {
-    if (!session?.user?.id) return
-    setFollowLoading(true)
+    if (!session?.user?.id) return;
+    setFollowLoading(true);
     try {
       if (isFollowing) {
         // Unfollow
         const res = await fetch(`/api/projectfollows?projectId=${id}`, {
           method: "DELETE",
-        })
+        });
         if (res.ok) {
-          setIsFollowing(false)
+          setIsFollowing(false);
         }
       } else {
         // Follow
@@ -120,38 +120,42 @@ export default function ProjectDetailPage({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ projectId: id }),
-        })
+        });
         if (res.ok) {
-          setIsFollowing(true)
+          setIsFollowing(true);
         }
       }
     } catch (err) {
-      console.error("Error toggling follow:", err)
+      console.error("Error toggling follow:", err);
     } finally {
-      setFollowLoading(false)
+      setFollowLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this project? This cannot be undone.")) {
-      return
+    if (
+      !confirm(
+        "Are you sure you want to delete this project? This cannot be undone."
+      )
+    ) {
+      return;
     }
 
     try {
       const res = await fetch(`/api/projects/${id}`, {
         method: "DELETE",
-      })
+      });
 
       if (res.ok) {
-        router.push("/projects")
+        router.push("/projects");
       } else {
-        alert("Failed to delete project")
+        alert("Failed to delete project");
       }
     } catch (error) {
-      console.error("Error deleting project:", error)
-      alert("Failed to delete project")
+      console.error("Error deleting project:", error);
+      alert("Failed to delete project");
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -163,7 +167,7 @@ export default function ProjectDetailPage({
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   if (error || !project) {
@@ -183,16 +187,18 @@ export default function ProjectDetailPage({
           </Card>
         </main>
       </div>
-    )
+    );
   }
 
-  const isOwner = session?.user?.id === project.userId
+  const isOwner = session?.user?.id === project.userId;
 
   // Transform posts for IdeaCard
   const ideas = posts.map((post: any) => {
-    const tagsMatch = post.content.match(/#tags:\s*(.+)$/m)
-    const tags = tagsMatch ? tagsMatch[1].split(",").map((t: string) => t.trim()) : []
-    const cleanContent = post.content.replace(/#tags:\s*.+$/m, "").trim()
+    const tagsMatch = post.content.match(/#tags:\s*(.+)$/m);
+    const tags = tagsMatch
+      ? tagsMatch[1].split(",").map((t: string) => t.trim())
+      : [];
+    const cleanContent = post.content.replace(/#tags:\s*.+$/m, "").trim();
 
     return {
       id: post.id,
@@ -206,12 +212,19 @@ export default function ProjectDetailPage({
       tags: tags,
       likes: post._count?.likes || 0,
       comments: post._count?.comments || 0,
-      timestamp: formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }),
-      isLiked: post.likes?.some((like: any) => like.userId === session?.user?.id) || false,
-      isBookmarked: post.bookmarks?.some((bookmark: any) => bookmark.userId === session?.user?.id) || false,
+      timestamp: formatDistanceToNow(new Date(post.createdAt), {
+        addSuffix: true,
+      }),
+      isLiked:
+        post.likes?.some((like: any) => like.userId === session?.user?.id) ||
+        false,
+      isBookmarked:
+        post.bookmarks?.some(
+          (bookmark: any) => bookmark.userId === session?.user?.id
+        ) || false,
       project: post.project,
-    }
-  })
+    };
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -233,8 +246,13 @@ export default function ProjectDetailPage({
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-2">{project.title}</h1>
                 <div className="flex items-center gap-3 mb-4">
-                  <span className={`text-sm px-3 py-1 rounded-full border ${statusColors[project.status]}`}>
-                    {statusEmojis[project.status]} {project.status.replace("_", " ")}
+                  <span
+                    className={`text-sm px-3 py-1 rounded-full border ${
+                      statusColors[project.status]
+                    }`}
+                  >
+                    {statusEmojis[project.status]}{" "}
+                    {project.status.replace("_", " ")}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     by {project.user?.name || "Anonymous"}
@@ -264,7 +282,7 @@ export default function ProjectDetailPage({
                   )}
                 </Button>
               )}
-              
+
               {isOwner && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -299,9 +317,12 @@ export default function ProjectDetailPage({
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              Created {formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })}
+              Created{" "}
+              {formatDistanceToNow(new Date(project.createdAt), {
+                addSuffix: true,
+              })}
             </div>
-            
+
             {project.githubUrl && (
               <a
                 href={project.githubUrl}
@@ -313,7 +334,7 @@ export default function ProjectDetailPage({
                 GitHub
               </a>
             )}
-            
+
             {project.liveUrl && (
               <a
                 href={project.liveUrl}
@@ -329,12 +350,16 @@ export default function ProjectDetailPage({
         </Card>
 
         <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Related Posts ({posts.length})</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            Related Posts ({posts.length})
+          </h2>
         </div>
 
         {ideas.length === 0 ? (
           <Card className="p-12 text-center">
-            <p className="text-muted-foreground">No posts linked to this project yet</p>
+            <p className="text-muted-foreground">
+              No posts linked to this project yet
+            </p>
           </Card>
         ) : (
           <div className="space-y-6">
@@ -349,6 +374,5 @@ export default function ProjectDetailPage({
         )}
       </main>
     </div>
-  )
+  );
 }
-

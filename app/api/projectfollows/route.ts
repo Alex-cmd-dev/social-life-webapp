@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth-helpers";
 
 /**
  * GET /api/projectfollows
- * 
+ *
  * Get project follows for current user or check if following a specific project
  */
 export async function GET(request: NextRequest) {
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/projectfollows
- * 
+ *
  * Follow a project
  */
 export async function POST(request: NextRequest) {
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * DELETE /api/projectfollows
- * 
+ *
  * Unfollow a project
  */
 export async function DELETE(request: NextRequest) {
@@ -173,4 +173,3 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
-

@@ -1,6 +1,6 @@
 /**
  * Users API Route
- * 
+ *
  * GET /api/users - Get all users
  * POST /api/users - Create a new user (if needed)
  */
@@ -11,7 +11,7 @@ import { requireAuth } from "@/lib/auth-helpers";
 
 /**
  * GET /api/users
- * 
+ *
  * Get all users with pagination
  * Requires authentication
  */
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       take: limit,
       skip: offset,
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
       select: {
         id: true,
@@ -58,13 +58,12 @@ export async function GET(request: NextRequest) {
             posts: true,
             followers: true,
             following: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     return NextResponse.json(users);
-
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(
@@ -76,7 +75,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/users
- * 
+ *
  * Create a new user (admin function - you might not need this if using signup)
  * Requires authentication
  */
@@ -92,15 +91,12 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!email) {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     // Check if user with email already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (existingUser) {
@@ -113,7 +109,7 @@ export async function POST(request: NextRequest) {
     // Check if username is taken (if provided)
     if (username) {
       const existingUsername = await prisma.user.findUnique({
-        where: { username }
+        where: { username },
       });
 
       if (existingUsername) {
@@ -140,11 +136,10 @@ export async function POST(request: NextRequest) {
         image: true,
         bio: true,
         createdAt: true,
-      }
+      },
     });
 
     return NextResponse.json(newUser, { status: 201 });
-
   } catch (error) {
     console.error("Error creating user:", error);
     return NextResponse.json(
@@ -153,4 +148,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

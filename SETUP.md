@@ -100,6 +100,8 @@ npm run db:studio
 
 This should open Prisma Studio at [http://localhost:5555](http://localhost:5555)
 
+You should see all tables: User, Post, Project, ProjectFollow, Like, Follow, Bookmark, Comment, etc.
+
 ### Check 2: No Errors
 
 Your terminal should show:
@@ -110,14 +112,18 @@ Your terminal should show:
 ✓ Compiled / in Xms
 ```
 
-### Check 3: See the Landing Page
+### Check 3: Test the App
 
-Visit [http://localhost:3000](http://localhost:3000) - you should see:
+Visit [http://localhost:3000](http://localhost:3000) and test:
 
-- "Social Life" header
-- "Connect with Your Community" heading
-- Three feature cards
-- Tech stack badges at the bottom
+1. **Sign Up** - Create a new account
+2. **Create a Post** - Click "Share Your Idea"
+3. **Create a Project** - Go to Projects → New Project
+4. **Link Post to Project** - Create a post and select a project
+5. **Search** - Click search icon and search for posts/users/projects
+6. **Bookmarks** - Bookmark a post and view it in Bookmarks page
+7. **Follow** - Follow another user or project
+8. **Profile** - Edit your profile picture, bio, etc.
 
 ## 🐛 Common Issues
 
@@ -165,11 +171,14 @@ npm run dev -- -p 3001
 
 Once everything is running:
 
-1. **Explore the code:**
+1. **Explore the app:**
 
-   - Check out `app/page.tsx` - the home page
-   - Look at `prisma/schema.prisma` - the database models
-   - Browse `components/` - reusable UI components
+   - Create your profile and add a bio
+   - Create a few posts with tags
+   - Create a project and link posts to it
+   - Follow other users and projects
+   - Bookmark interesting posts
+   - Use search to find content
 
 2. **View your database:**
 
@@ -177,17 +186,27 @@ Once everything is running:
    npm run db:studio
    ```
 
-3. **Start building features:**
+   You can see all your data in real-time!
 
-   - Add authentication providers
-   - Create user profile pages
-   - Build the post feed
-   - Implement likes and follows
+3. **Explore the code:**
 
-4. **Read the docs:**
+   - Check out `app/(frontend)/` - all page routes
+   - Look at `app/api/` - backend API endpoints
+   - Browse `components/` - reusable UI components
+   - Study `prisma/schema.prisma` - the database models
+
+4. **Build new features:**
+
+   - Implement commenting (API already exists)
+   - Add notifications system
+   - Create project updates/roadmap
+   - Add image uploads for posts
+
+5. **Read the docs:**
    - [Next.js Documentation](https://nextjs.org/docs)
    - [Prisma Documentation](https://www.prisma.io/docs)
    - [Tailwind CSS](https://tailwindcss.com/docs)
+   - Check `docs/api-specification.yaml` for API reference
 
 ## 📚 Available Commands
 
@@ -205,4 +224,3 @@ npm run db:generate # Generate Prisma Client
 
 - Check the main [README.md](./README.md) for detailed documentation
 - Review the [Components Guide](./components/README.md)
-

@@ -93,14 +93,14 @@ export function UserProfile({
               e.currentTarget.parentElement?.appendChild(
                 Object.assign(document.createElement("div"), {
                   className:
-                    "w-[120px] h-[120px] rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white text-5xl font-bold",
+                    "w-[120px] h-[120px] rounded-full bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white text-5xl font-bold",
                   textContent: user.name?.charAt(0).toUpperCase() || "?",
                 })
               );
             }}
           />
         ) : (
-          <div className="w-[120px] h-[120px] rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white text-5xl font-bold">
+          <div className="w-[120px] h-[120px] rounded-full bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white text-5xl font-bold">
             {user.name?.charAt(0).toUpperCase() || "?"}
           </div>
         )}
@@ -128,7 +128,7 @@ export function UserProfile({
                 className={
                   isFollowing
                     ? "bg-background border border-primary text-primary hover:bg-primary/10"
-                    : "bg-gradient-to-br from-purple-600 to-pink-600"
+                    : "bg-linear-to-br from-purple-600 to-pink-600"
                 }
               >
                 {isFollowing ? (

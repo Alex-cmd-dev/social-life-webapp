@@ -40,7 +40,9 @@ export default function ProfilePage({
 
       // Fetch user's projects
       const projectsResponse = await fetch(`/api/projects?userId=${username}`);
-      const projectsData = projectsResponse.ok ? await projectsResponse.json() : [];
+      const projectsData = projectsResponse.ok
+        ? await projectsResponse.json()
+        : [];
       setUserProjects(projectsData);
 
       // Check if this is the current user's profile
@@ -137,7 +139,7 @@ export default function ProfilePage({
           isOwner={isOwner}
           onProfileUpdate={handleProfileUpdate}
         />
-        
+
         <Tabs defaultValue="ideas" className="w-full mt-8">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="ideas" className="gap-2">
@@ -160,7 +162,9 @@ export default function ProfilePage({
                 <Folder className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h2 className="text-xl font-semibold mb-2">No projects yet</h2>
                 <p className="text-muted-foreground">
-                  {isOwner ? "Create your first project to start tracking your ideas" : "This user hasn't created any projects yet"}
+                  {isOwner
+                    ? "Create your first project to start tracking your ideas"
+                    : "This user hasn't created any projects yet"}
                 </p>
               </Card>
             ) : (
@@ -183,7 +187,9 @@ export default function ProfilePage({
                         {project.description}
                       </p>
                       <div className="mt-3 text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(project.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(project.createdAt), {
+                          addSuffix: true,
+                        })}
                       </div>
                     </Card>
                   </Link>

@@ -1,8 +1,22 @@
-# In Progress - Social Media Web App (IdeaBox)
+# IdeaBox - Social Media Web App
 
-A modern social media application built with Next.js 15, TypeScript, Prisma, and PostgreSQL. This project is designed for learning web development and building a complete full-stack application.
+A modern, full-stack social media platform built with Next.js 15, TypeScript, Prisma, and PostgreSQL. Share ideas, manage projects, and connect with creators.
 
-Current Focus: **IdeaBox** - A platform for sharing ideas, getting feedback, and following inspiring projects and creators.
+**Status:** 🟢 **Production Ready** - All core features implemented and tested!
+
+**IdeaBox** is a platform for sharing ideas, getting feedback, following inspiring projects, and tracking your creative journey.
+
+## ✨ Key Features
+
+- 📝 **Posts & Ideas** - Share thoughts, get feedback, edit/delete your posts
+- 🗂️ **Project Management** - Create projects, link posts, track progress
+- 🔖 **Bookmarks** - Save posts for later reading
+- 🔍 **Search** - Find posts, users, and projects instantly
+- 👥 **Social** - Follow users and projects, see personalized feeds
+- ❤️ **Engagement** - Like posts, view engagement metrics
+- 👤 **Profiles** - Customizable profiles with bio and profile pictures
+- 🏷️ **Tags** - Organize posts with custom tags
+- 🌙 **Dark Mode** - Beautiful dark theme
 
 ## 🚀 Tech Stack
 
@@ -10,33 +24,35 @@ Current Focus: **IdeaBox** - A platform for sharing ideas, getting feedback, and
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS v4
 - **UI Components:** shadcn/ui (Radix UI primitives)
-- **Database:** PostgreSQL (via Supabase or Neon)
+- **Database:** PostgreSQL (via Supabase)
 - **ORM:** Prisma
-- **Authentication:** NextAuth.js
+- **Authentication:** NextAuth.js (Credentials)
 - **Icons:** Lucide React
+- **Validation:** Zod (via shadcn/ui forms)
 
 ## 📋 Features
 
-### ✅ Implemented
-- IdeaBox feed with idea cards
-- Create idea dialog (UI only, using mock data)
-- User profile pages
-- Idea detail pages
-- Comment sections
-- Following feed
-- Project roadmap view
-- Responsive header with navigation
-- Dark mode support
-- Beautiful UI with shadcn/ui components
+### ✅ Fully Implemented
 
-### 🚧 Planned
-- User authentication and profiles
-- Backend API integration
-- Database persistence
-- Real-time updates
-- Like and bookmark functionality
-- User follow/unfollow
-- Search functionality
+- **Authentication** - Sign up, sign in, sign out with NextAuth.js
+- **User Profiles** - View profiles, edit profile (name, username, bio, profile picture)
+- **Posts/Ideas Feed** - Create, edit, delete posts with tags
+- **Project Management** - Create projects, link posts to projects, project detail pages
+- **Social Features** - Like/unlike posts, follow/unfollow users, follow projects
+- **Bookmarks** - Save posts for later viewing
+- **Search** - Search across posts, users, and projects
+- **Following Feed** - See posts from users you follow
+- **Project Badges** - Visual indicators showing which project a post belongs to
+- **Responsive Design** - Works on desktop and mobile
+- **Dark Mode** - Beautiful dark theme throughout
+- **Modern UI** - Built with shadcn/ui components
+
+### 🚧 In Progress
+
+- Comment functionality (UI complete, API ready)
+- Notifications system
+- Project roadmap and updates
+- Real-time updates via WebSockets
 
 ## 🛠️ Prerequisites
 
@@ -90,7 +106,7 @@ This will install all the required packages. It may take a few minutes.
 
 You'll sign up for a **free cloud database** that's always running online:
 
-#### Supabase 
+#### Supabase
 
 1. Go to [supabase.com](https://supabase.com/) and sign up for free
 2. Click "New Project"
@@ -103,7 +119,6 @@ You'll sign up for a **free cloud database** that's always running online:
 6. Find the **Connection String** section
 7. Copy the "URI" connection string (it starts with `postgresql://`)
 8. Replace `[YOUR-PASSWORD]` in the string with your database password
-
 
 ### Step 4: Configure Environment Variables
 
@@ -139,7 +154,7 @@ Push the database schema to your cloud database:
 npm run db:push
 ```
 
-This creates all the necessary tables (User, Post, Like, Follow) **in your cloud database** based on the Prisma schema.
+This creates all the necessary tables (User, Post, Like, Follow, Bookmark, Project, ProjectFollow, Comment, etc.) **in your cloud database** based on the Prisma schema.
 
 **What just happened:**
 
@@ -195,28 +210,51 @@ This opens a web interface at [http://localhost:5555](http://localhost:5555) whe
 social-life-webapp/
 ├── app/                    # Next.js App Router
 │   ├── (frontend)/        # 🎨 Frontend - User pages (organized)
-│   │   ├── page.tsx       # Home page (IdeaBox feed)
+│   │   ├── page.tsx       # Landing page
+│   │   ├── feed/          # Main feed page
 │   │   ├── following/     # Following feed page
+│   │   ├── bookmarks/     # Bookmarks page
+│   │   ├── search/        # Search page
+│   │   ├── projects/      # Projects management
+│   │   │   ├── page.tsx   # Projects list
+│   │   │   └── [id]/      # Project detail pages
 │   │   ├── idea/[id]/     # Individual idea detail pages
-│   │   └── profile/[username]/  # User profile pages
+│   │   ├── profile/[username]/  # User profile pages
+│   │   └── auth/          # Sign in/up pages
 │   ├── api/               # ⚙️ Backend - API routes
-│   │   └── auth/          # NextAuth API routes
+│   │   ├── auth/          # NextAuth API routes
+│   │   ├── posts/         # Posts CRUD
+│   │   ├── users/         # Users management
+│   │   ├── projects/      # Projects CRUD
+│   │   ├── projectfollows/ # Project follow/unfollow
+│   │   ├── likes/         # Like/unlike posts
+│   │   ├── follows/       # User follow/unfollow
+│   │   ├── bookmarks/     # Bookmark posts
+│   │   └── comments/      # Comments (ready)
 │   ├── layout.tsx         # Root layout
 │   └── globals.css        # Global styles & theme variables
 ├── components/            # Reusable React components
 │   ├── ui/               # shadcn/ui components (button, card, dialog, etc.)
 │   ├── header.tsx        # App header with navigation
 │   ├── idea-feed.tsx     # Main idea feed component
+│   ├── following-feed.tsx # Following feed component
 │   ├── idea-card.tsx     # Individual idea card
 │   ├── create-idea-dialog.tsx  # Create idea modal
+│   ├── create-project-dialog.tsx  # Create project modal
+│   ├── edit-profile-dialog.tsx    # Edit profile modal
+│   ├── edit-post-dialog.tsx       # Edit post modal
 │   └── ...               # Other feature components
 ├── lib/                   # Utility functions & configs
 │   ├── prisma.ts         # Database client
 │   ├── auth.ts           # NextAuth configuration
+│   ├── auth-helpers.ts   # Auth helper functions
 │   └── utils.ts          # Utility functions (cn helper)
 ├── prisma/               # 🗄️ Database schema
-│   └── schema.prisma     # Database models (User, Post, Like, Follow)
+│   └── schema.prisma     # Database models (User, Post, Project, ProjectFollow, Like, Follow, Bookmark, Comment)
 ├── types/                # TypeScript type definitions
+├── docs/                 # Documentation
+│   ├── api-specification.yaml  # API specification
+│   └── SUPABASE_SETUP.md      # Database setup guide
 ├── components.json       # shadcn/ui configuration
 ├── .env                  # Environment variables (DO NOT COMMIT)
 ├── .env.example          # Example environment variables
@@ -311,6 +349,7 @@ If you see peer dependency errors during `npm install`:
 - This file configures npm to use `legacy-peer-deps=true` for compatibility between Next.js 15 and NextAuth.js v4
 - Simply run `npm install` - the configuration will be applied automatically
 - If issues persist:
+
   ```bash
   # Delete node_modules and package-lock.json
   # Windows:

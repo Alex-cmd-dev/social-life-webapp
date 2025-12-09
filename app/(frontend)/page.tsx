@@ -28,7 +28,7 @@ export default function LandingPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center mx-auto mb-4">
+          <div className="h-12 w-12 rounded-xl bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center mx-auto mb-4">
             <Package className="h-7 w-7 text-white" />
           </div>
           <p className="text-muted-foreground">Loading...</p>
@@ -45,7 +45,7 @@ export default function LandingPage() {
         <header className="border-b border-border">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-lg bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                 <Package className="h-5 w-5 text-white" />
               </div>
               <span className="font-bold text-xl">IdeaBox</span>
@@ -59,7 +59,7 @@ export default function LandingPage() {
               <Link href="/auth/signup">
                 <Button
                   size="sm"
-                  className="bg-gradient-to-br from-purple-600 to-pink-600"
+                  className="bg-linear-to-br from-purple-600 to-pink-600"
                 >
                   Sign Up
                 </Button>
@@ -72,12 +72,12 @@ export default function LandingPage() {
         <main className="container mx-auto px-4 py-20">
           <div className="max-w-4xl mx-auto text-center">
             <div className="mb-8">
-              <div className="inline-flex h-20 w-20 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 items-center justify-center mb-6">
+              <div className="inline-flex h-20 w-20 rounded-2xl bg-linear-to-br from-purple-600 to-pink-600 items-center justify-center mb-6">
                 <Package className="h-12 w-12 text-white" />
               </div>
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-br from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-linear-to-br from-purple-400 to-pink-400 bg-clip-text text-transparent">
               Share Your Ideas with the World
             </h1>
 
@@ -90,7 +90,7 @@ export default function LandingPage() {
               <Link href="/auth/signup">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-br from-purple-600 to-pink-600 px-8 text-lg h-12"
+                  className="bg-linear-to-br from-purple-600 to-pink-600 px-8 text-lg h-12"
                 >
                   Get Started <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -149,7 +149,7 @@ export default function LandingPage() {
           <div className="container mx-auto px-4 py-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                <div className="h-6 w-6 rounded-lg bg-linear-to-br from-purple-600 to-pink-600 flex items-center justify-center">
                   <Package className="h-4 w-4 text-white" />
                 </div>
                 <span className="font-semibold">IdeaBox</span>
