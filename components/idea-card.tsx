@@ -269,14 +269,16 @@ export function IdeaCard({
               <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""}`} />
               <span>{likeCount}</span>
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 text-muted-foreground hover:text-primary"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span>{idea.comments}</span>
-            </Button>
+            <Link href={`/idea/${idea.id}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-muted-foreground hover:text-primary"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>{idea.comments}</span>
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               size="sm"
