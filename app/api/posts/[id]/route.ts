@@ -57,6 +57,7 @@ export async function GET(
           }
         },
         likes: true,
+        bookmarks: true,
         project: true,  // Include project if post is linked to one
         _count: {
           select: {

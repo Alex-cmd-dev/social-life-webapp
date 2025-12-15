@@ -100,7 +100,7 @@ npm run db:studio
 
 This should open Prisma Studio at [http://localhost:5555](http://localhost:5555)
 
-You should see all tables: User, Post, Project, ProjectFollow, Like, Follow, Bookmark, Comment, etc.
+cleYou should see all tables: User, Post, Project, ProjectFollow, Like, Follow, Bookmark, Comment, etc.
 
 ### Check 2: No Errors
 

@@ -1,11 +1,10 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Header } from "@/components/header";
 import { IdeaDetail } from "@/components/idea-detail";
 import { CommentSection } from "@/components/comment-section";
-import { ProjectRoadmap } from "@/components/project-roadmap";
-import { PostUpdateDialog } from "@/components/post-update-dialog";
 import { formatDistanceToNow } from "date-fns";
 
 export default function IdeaPage({
@@ -14,10 +13,11 @@ export default function IdeaPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const { data: session } = useSession();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFollowingProject, setIsFollowingProject] = useState(false);
 
   useEffect(() => {
     async function fetchPost() {
@@ -28,6 +28,15 @@ export default function IdeaPage({
         }
         const data = await response.json();
         setPost(data);
+
+        // If this is a project post, check if user is following it
+        if (data.projectId && session?.user?.id) {
+          const followResponse = await fetch(`/api/projectfollows?projectId=${data.projectId}`);
+          if (followResponse.ok) {
+            const followData = await followResponse.json();
+            setIsFollowingProject(followData.isFollowing || false);
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -36,7 +45,7 @@ export default function IdeaPage({
     }
 
     fetchPost();
-  }, [id]);
+  }, [id, session?.user?.id]);
 
   if (loading) {
     return (
@@ -64,29 +73,49 @@ export default function IdeaPage({
     );
   }
 
+  // Parse tags from content
+  const tagsMatch = post.content.match(/#tags:\s*(.+)$/m);
+  const tags = tagsMatch
+    ? tagsMatch[1].split(",").map((t: string) => t.trim())
+    : [];
+
+  // Remove tags line from content
+  const cleanContent = post.content.replace(/#tags:\s*.+$/m, "").trim();
+
+  // Extract title from first line and content from rest
+  const lines = cleanContent.split("\n");
+  const titleText = lines[0] || "";
+  const contentWithoutTitle = lines.slice(1).join("\n").trim();
+
   const idea = {
     id: post.id,
     author: {
       name: post.user.name || "Anonymous",
       username: post.user.id,
-      avatar: post.user.image || "/placeholder.svg",
+      avatar: post.user.image || "https://ui-avatars.com/api/?name=" + encodeURIComponent(post.user.name || "User") + "&background=random",
     },
-    title: post.content.split("\n")[0].substring(0, 100),
-    content: post.content,
-    tags: [],
+    title: titleText,
+    content: contentWithoutTitle,
+    tags: tags,
     likes: post._count?.likes || 0,
     comments: post._count?.comments || 0,
     timestamp: formatDistanceToNow(new Date(post.createdAt), {
       addSuffix: true,
     }),
-    isLiked: false,
-    isBookmarked: false,
-    isProject: false,
-    isFollowingProject: false,
+    isLiked:
+      post.likes?.some(
+        (like: any) => like.userId === session?.user?.id
+      ) || false,
+    isBookmarked:
+      post.bookmarks?.some(
+        (bookmark: any) => bookmark.userId === session?.user?.id
+      ) || false,
+    isProject: !!post.projectId,
+    isFollowingProject: isFollowingProject,
+    project: post.project,
   };
 
-  const roadmapUpdates: any[] = [];
-  const isOwner = false;
+  const isOwner = session?.user?.id === post.userId;
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,24 +123,7 @@ export default function IdeaPage({
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <IdeaDetail idea={idea} isOwner={isOwner} />
 
-        {idea.isProject && (
-          <ProjectRoadmap
-            projectId={idea.id}
-            projectTitle={idea.title}
-            updates={roadmapUpdates}
-            isOwner={isOwner}
-            onAddUpdate={() => setUpdateDialogOpen(true)}
-          />
-        )}
-
         <CommentSection ideaId={id} />
-
-        <PostUpdateDialog
-          open={updateDialogOpen}
-          onOpenChange={setUpdateDialogOpen}
-          projectId={idea.id}
-          projectTitle={idea.title}
-        />
       </main>
     </div>
   );

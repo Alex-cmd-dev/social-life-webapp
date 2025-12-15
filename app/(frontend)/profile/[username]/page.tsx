@@ -68,22 +68,38 @@ export default function ProfilePage({
         isFollowing: false,
       });
 
-      const formattedPosts = postsData.map((post: any) => ({
-        id: post.id,
-        author: {
-          name: userData.name || "Anonymous",
-          username: userData.id,
-          avatar: userData.image || "/placeholder.svg",
-        },
-        title: post.content.split("\n")[0].substring(0, 100),
-        content: post.content,
-        tags: [],
-        likes: post._count?.likes || 0,
-        comments: post._count?.comments || 0,
-        timestamp: formatDistanceToNow(new Date(post.createdAt), {
-          addSuffix: true,
-        }),
-      }));
+      const formattedPosts = postsData.map((post: any) => {
+        // Parse tags from content
+        const tagsMatch = post.content.match(/#tags:\s*(.+)$/m);
+        const tags = tagsMatch
+          ? tagsMatch[1].split(",").map((t: string) => t.trim())
+          : [];
+
+        // Remove tags line from content
+        const cleanContent = post.content.replace(/#tags:\s*.+$/m, "").trim();
+
+        // Extract title from first line and content from rest
+        const lines = cleanContent.split("\n");
+        const title = lines[0] || "";
+        const contentWithoutTitle = lines.slice(1).join("\n").trim();
+
+        return {
+          id: post.id,
+          author: {
+            name: userData.name || "Anonymous",
+            username: userData.id,
+            avatar: userData.image || "/placeholder.svg",
+          },
+          title: title,
+          content: contentWithoutTitle,
+          tags: tags,
+          likes: post._count?.likes || 0,
+          comments: post._count?.comments || 0,
+          timestamp: formatDistanceToNow(new Date(post.createdAt), {
+            addSuffix: true,
+          }),
+        };
+      });
 
       setUserPosts(formattedPosts);
     } catch (err) {

@@ -106,6 +106,11 @@ export function IdeaFeed() {
         // Remove tags line from content
         const cleanContent = post.content.replace(/#tags:\s*.+$/m, "").trim();
 
+        // Extract title from first line and content from rest
+        const lines = cleanContent.split("\n");
+        const title = lines[0] || "";
+        const contentWithoutTitle = lines.slice(1).join("\n").trim();
+
         const idea = {
           id: post.id,
           author: {
@@ -113,8 +118,8 @@ export function IdeaFeed() {
             username: post.user.id,
             avatar: post.user.image || "/placeholder.svg",
           },
-          title: cleanContent.split("\n")[0].substring(0, 100),
-          content: cleanContent,
+          title: title,
+          content: contentWithoutTitle,
           tags: tags,
           likes: post._count.likes,
           comments: post._count.comments,

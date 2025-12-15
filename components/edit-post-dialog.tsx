@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
@@ -29,28 +30,59 @@ export function EditPostDialog({
   post,
   onSuccess,
 }: EditPostDialogProps) {
-  const [content, setContent] = useState(post.content);
+  // Parse the content to extract title and description
+  const parseContent = (content: string) => {
+    // Remove tags line if present
+    const cleanContent = content.replace(/#tags:\s*.+$/m, "").trim();
+    const lines = cleanContent.split("\n");
+    const title = lines[0] || "";
+    const description = lines.slice(1).join("\n").trim();
+    return { title, description };
+  };
+
+  const { title: initialTitle, description: initialDescription } = parseContent(post.content);
+  const [title, setTitle] = useState(initialTitle);
+  const [description, setDescription] = useState(initialDescription);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update title and description when post changes
+  useEffect(() => {
+    const { title: newTitle, description: newDescription } = parseContent(post.content);
+    setTitle(newTitle);
+    setDescription(newDescription);
+  }, [post.content]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!content.trim()) {
-      setError("Post content cannot be empty");
+    if (!title.trim()) {
+      setError("Title cannot be empty");
+      return;
+    }
+
+    if (!description.trim()) {
+      setError("Description cannot be empty");
       return;
     }
 
     setLoading(true);
 
     try {
+      // Parse tags from original content to preserve them
+      const tagsMatch = post.content.match(/#tags:\s*(.+)$/m);
+      const tagsLine = tagsMatch ? `\n\n${tagsMatch[0]}` : "";
+
+      // Combine title and description
+      const fullContent = `${title}\n${description}${tagsLine}`;
+
       const response = await fetch(`/api/posts/${post.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content: fullContent }),
       });
 
       const data = await response.json();
@@ -90,18 +122,27 @@ export function EditPostDialog({
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="content">Content</Label>
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Give your idea a catchy title..."
+                required
+                className="text-lg"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
               <Textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="What's on your mind?"
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe your idea in detail..."
                 rows={6}
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                {content.length} characters
-              </p>
             </div>
           </div>
 

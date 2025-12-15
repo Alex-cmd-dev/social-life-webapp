@@ -86,8 +86,9 @@ export function CreateIdeaDialog({
     setError(null);
 
     try {
-      // Store tags as metadata in content (will be parsed by feed components)
-      const fullContent = `${content}${
+      // Combine title and content, with tags as metadata
+      // The first line will be the title, followed by the description
+      const fullContent = `${title}\n${content}${
         tags.length > 0 ? `\n\n#tags: ${tags.join(", ")}` : ""
       }`;
 

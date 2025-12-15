@@ -6,14 +6,12 @@ import { Card } from "@/components/ui/card";
 import {
   Heart,
   MessageCircle,
-  Share2,
   Bookmark,
   MoreHorizontal,
   Pencil,
   Trash2,
   Folder,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -75,18 +73,48 @@ export function IdeaCard({
         const response = await fetch(`/api/likes/${idea.id}`, {
           method: "DELETE",
         });
+
         if (response.ok) {
           setLiked(false);
           setLikeCount((prev) => prev - 1);
+        } else {
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch (e) {
+            errorData = { error: `HTTP ${response.status}` };
+          }
+          console.error("Error unliking post:", errorData);
+          // If the like doesn't exist (404), sync the state
+          if (response.status === 404) {
+            setLiked(false);
+          }
         }
       } else {
         // Like
         const response = await fetch(`/api/likes/${idea.id}`, {
           method: "POST",
         });
+
         if (response.ok) {
           setLiked(true);
           setLikeCount((prev) => prev + 1);
+        } else {
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch (e) {
+            errorData = { error: `HTTP ${response.status}` };
+          }
+          console.error("Error liking post:", errorData);
+          // If already liked (400), sync the state
+          if (response.status === 400 && errorData.error?.includes("Already liked")) {
+            setLiked(true);
+          }
+          // If not authenticated (401), show message
+          if (response.status === 401) {
+            alert("Please sign in to like posts");
+          }
         }
       }
     } catch (error) {

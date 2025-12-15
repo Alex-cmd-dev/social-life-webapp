@@ -94,6 +94,11 @@ export default function BookmarksPage() {
       .replace(/#tags:\s*.+$/m, "")
       .trim();
 
+    // Extract title from first line and content from rest
+    const lines = cleanContent.split("\n");
+    const title = lines[0] || "";
+    const contentWithoutTitle = lines.slice(1).join("\n").trim();
+
     return {
       id: bookmark.post.id,
       author: {
@@ -101,8 +106,8 @@ export default function BookmarksPage() {
         username: bookmark.post.user.username || bookmark.post.user.id,
         avatar: bookmark.post.user.image || "/placeholder.svg",
       },
-      title: cleanContent.split("\n")[0].substring(0, 100),
-      content: cleanContent,
+      title: title,
+      content: contentWithoutTitle,
       tags: tags,
       likes: bookmark.post._count?.likes || 0,
       comments: bookmark.post._count?.comments || 0,
