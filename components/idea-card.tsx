@@ -328,7 +328,10 @@ export function IdeaCard({
       <EditPostDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        post={{ id: idea.id, content: idea.content }}
+        post={{
+          id: idea.id,
+          content: `${idea.title}\n${idea.content}${idea.tags.length > 0 ? `\n\n#tags: ${idea.tags.join(", ")}` : ""}`
+        }}
         onSuccess={handleEditSuccess}
       />
 
